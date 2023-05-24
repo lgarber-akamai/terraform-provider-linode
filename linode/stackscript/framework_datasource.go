@@ -3,9 +3,7 @@ package stackscript
 import (
 	"context"
 	"fmt"
-
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/linode/linodego"
 	"github.com/linode/terraform-provider-linode/linode/helper"
 )
 
@@ -14,7 +12,7 @@ func NewDataSource() datasource.DataSource {
 }
 
 type DataSource struct {
-	client *linodego.Client
+	meta *helper.FrameworkProviderMeta
 }
 
 func (r *DataSource) Configure(
@@ -27,12 +25,10 @@ func (r *DataSource) Configure(
 		return
 	}
 
-	meta := helper.GetDataSourceMeta(req, resp)
+	r.meta = helper.GetDataSourceMeta(req, resp)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
-	r.client = meta.Client
 }
 
 func (r *DataSource) Metadata(
@@ -56,7 +52,7 @@ func (r *DataSource) Read(
 	req datasource.ReadRequest,
 	resp *datasource.ReadResponse,
 ) {
-	client := r.client
+	client := r.meta.Client
 
 	var data StackScriptModel
 
@@ -69,6 +65,9 @@ func (r *DataSource) Read(
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
+	// Print a random provider config value
+	fmt.Println(r.meta.Config.EventPollMilliseconds.ValueInt64())
 
 	stackscript, err := client.GetStackscript(ctx, int(id))
 	if err != nil {
