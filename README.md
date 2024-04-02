@@ -65,7 +65,13 @@ make int-test
 In order to run specific Acceptance tests, the following command template can be used.
 
 ```shell
-make PKG_NAME="linode/volume" ARGS="-run TestAccResourceVolume_basic" int-test
+make ARGS="-run TestAccResourceVolume_basic" int-test
+```
+
+In order to run specific Acceptance tests in specific package, the following command tempalte can be used.
+
+```shell
+make TEST_TAGS="volume" int-test
 ```
 
 There are a number of useful flags and variables to aid in debugging.
