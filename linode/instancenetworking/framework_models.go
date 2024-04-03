@@ -1,6 +1,7 @@
 package instancenetworking
 
 import (
+	"context"
 	"encoding/json"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
@@ -8,7 +9,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/linode/linodego"
-	"github.com/linode/terraform-provider-linode/v2/linode/helper"
 )
 
 type DataSourceModel struct {
@@ -19,18 +19,18 @@ type DataSourceModel struct {
 }
 
 func (data *DataSourceModel) parseInstanceIPAddressResponse(
-	ip *linodego.InstanceIPAddressResponse, diags *diag.Diagnostics,
-) {
-	ipv4 := flattenIPv4(ip.IPv4, diags)
+	ctx context.Context, ip *linodego.InstanceIPAddressResponse,
+) diag.Diagnostics {
+	ipv4, diags := flattenIPv4(ctx, ip.IPv4)
 	if diags.HasError() {
-		return
+		return diags
 	}
 
 	data.IPV4 = *ipv4
 
-	ipv6 := flattenIPv6(ip.IPv6, diags)
+	ipv6, diags := flattenIPv6(ctx, ip.IPv6)
 	if diags.HasError() {
-		return
+		return diags
 	}
 
 	data.IPV6 = *ipv6
@@ -38,85 +38,102 @@ func (data *DataSourceModel) parseInstanceIPAddressResponse(
 	id, err := json.Marshal(ip)
 	if err != nil {
 		diags.AddError("Error marshalling json: %s", err.Error())
-		return
+		return diags
 	}
 
 	data.ID = types.StringValue(string(id))
+
+	return nil
 }
 
-func flattenIPv4(network *linodego.InstanceIPv4Response, diags *diag.Diagnostics) *basetypes.ListValue {
+func flattenIPv4(ctx context.Context, network *linodego.InstanceIPv4Response) (
+	*basetypes.ListValue, diag.Diagnostics,
+) {
 	result := make(map[string]attr.Value)
 
-	result["private"] = helper.GenericSliceToList(network.Private, networkObjectType, flattenIP, diags)
-	if diags.HasError() {
-		return nil
+	private, diag := flattenIPs(ctx, network.Private)
+	if diag.HasError() {
+		return nil, diag
 	}
 
-	result["public"] = helper.GenericSliceToList(network.Public, networkObjectType, flattenIP, diags)
-	if diags.HasError() {
-		return nil
+	public, diag := flattenIPs(ctx, network.Public)
+	if diag.HasError() {
+		return nil, diag
 	}
 
-	result["reserved"] = helper.GenericSliceToList(network.Reserved, networkObjectType, flattenIP, diags)
-	if diags.HasError() {
-		return nil
+	reserved, diag := flattenIPs(ctx, network.Reserved)
+	if diag.HasError() {
+		return nil, diag
 	}
 
-	result["shared"] = helper.GenericSliceToList(network.Shared, networkObjectType, flattenIP, diags)
-	if diags.HasError() {
-		return nil
+	shared, diag := flattenIPs(ctx, network.Shared)
+	if diag.HasError() {
+		return nil, diag
 	}
 
-	resultList := helper.GenericSliceToList(
-		[]map[string]attr.Value{result},
+	result["private"] = private
+	result["public"] = public
+	result["reserved"] = reserved
+	result["shared"] = shared
+
+	obj, diag := types.ObjectValue(ipv4ObjectType.AttrTypes, result)
+	if diag.HasError() {
+		return nil, diag
+	}
+
+	objList := []attr.Value{obj}
+
+	resultList, diag := basetypes.NewListValue(
 		ipv4ObjectType,
-		func(v map[string]attr.Value) (types.Object, diag.Diagnostics) {
-			return types.ObjectValue(ipv4ObjectType.AttrTypes, result)
-		},
-		diags,
+		objList,
 	)
-	if diags.HasError() {
-		return nil
+	if diag.HasError() {
+		return nil, diag
 	}
 
-	return &resultList
+	return &resultList, nil
 }
 
-func flattenIPv6(network *linodego.InstanceIPv6Response, diags *diag.Diagnostics) *basetypes.ListValue {
+func flattenIPv6(ctx context.Context, network *linodego.InstanceIPv6Response) (
+	*basetypes.ListValue, diag.Diagnostics,
+) {
 	result := make(map[string]attr.Value)
 
-	global := helper.GenericSliceToList(network.Global, globalObjectType, flattenIPV6Range, diags)
-
-	link_local, newDiags := flattenIP(network.LinkLocal)
-	if newDiags.HasError() {
-		diags.Append(newDiags...)
-		return nil
+	global, diag := flattenGlobal(ctx, network.Global)
+	if diag.HasError() {
+		return nil, diag
 	}
 
-	slaac, newDiags := flattenIP(network.SLAAC)
-	if newDiags.HasError() {
-		diags.Append(newDiags...)
-		return nil
+	link_local, diag := flattenIP(ctx, network.LinkLocal)
+	if diag.HasError() {
+		return nil, diag
+	}
+
+	slaac, diag := flattenIP(ctx, network.SLAAC)
+	if diag.HasError() {
+		return nil, diag
 	}
 
 	result["global"] = global
 	result["link_local"] = link_local
 	result["slaac"] = slaac
 
-	obj, newDiags := types.ObjectValue(ipv6ObjectType.AttrTypes, result)
-	if newDiags.HasError() {
-		diags.Append(newDiags...)
-		return nil
+	obj, diag := types.ObjectValue(ipv6ObjectType.AttrTypes, result)
+	if diag.HasError() {
+		return nil, diag
 	}
 
-	resultList := helper.GenericSliceToList(
-		[]attr.Value{obj}, ipv6ObjectType, helper.FwValueEchoConverter(), diags,
+	objList := []attr.Value{obj}
+
+	resultList, diag := basetypes.NewListValue(
+		ipv6ObjectType,
+		objList,
 	)
-	if diags.HasError() {
-		return nil
+	if diag.HasError() {
+		return nil, diag
 	}
 
-	return &resultList
+	return &resultList, nil
 }
 
 func FlattenIPVPCNAT1To1(data *linodego.InstanceIPNAT1To1) (basetypes.ObjectValue, diag.Diagnostics) {
@@ -138,7 +155,7 @@ func FlattenIPVPCNAT1To1(data *linodego.InstanceIPNAT1To1) (basetypes.ObjectValu
 	return obj, nil
 }
 
-func flattenIP(network *linodego.InstanceIP) (
+func flattenIP(ctx context.Context, network *linodego.InstanceIP) (
 	*basetypes.ObjectValue, diag.Diagnostics,
 ) {
 	result := make(map[string]attr.Value)
@@ -168,7 +185,32 @@ func flattenIP(network *linodego.InstanceIP) (
 	return &obj, nil
 }
 
-func flattenIPV6Range(network linodego.IPv6Range) (
+func flattenIPs(ctx context.Context, network []*linodego.InstanceIP) (
+	*basetypes.ListValue, diag.Diagnostics,
+) {
+	resultList := make([]attr.Value, len(network))
+
+	for i, network := range network {
+		result, diag := flattenIP(ctx, network)
+		if diag.HasError() {
+			return nil, diag
+		}
+
+		resultList[i] = result
+	}
+
+	result, diag := basetypes.NewListValue(
+		networkObjectType,
+		resultList,
+	)
+	if diag.HasError() {
+		return nil, diag
+	}
+
+	return &result, nil
+}
+
+func flattenIPV6Range(ctx context.Context, network linodego.IPv6Range) (
 	*basetypes.ObjectValue, diag.Diagnostics,
 ) {
 	result := make(map[string]attr.Value)
@@ -184,4 +226,29 @@ func flattenIPV6Range(network linodego.IPv6Range) (
 	}
 
 	return &obj, nil
+}
+
+func flattenGlobal(ctx context.Context, network []linodego.IPv6Range) (
+	*basetypes.ListValue, diag.Diagnostics,
+) {
+	resultList := make([]attr.Value, len(network))
+
+	for i, network := range network {
+		result, diag := flattenIPV6Range(ctx, network)
+		if diag.HasError() {
+			return nil, diag
+		}
+
+		resultList[i] = result
+	}
+
+	result, diag := basetypes.NewListValue(
+		globalObjectType,
+		resultList,
+	)
+	if diag.HasError() {
+		return nil, diag
+	}
+
+	return &result, nil
 }

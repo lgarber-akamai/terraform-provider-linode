@@ -57,7 +57,7 @@ jobs:
         env:
           LINODE_TOKEN: ${{ secrets.DX_LINODE_TOKEN }}
           RUN_LONG_TESTS: ${{ inputs.run_long_tests }}
-      
+
       - name: Get the hash value of the latest commit from the PR branch
         uses: octokit/graphql-action@v2.x
         id: commit-hash
