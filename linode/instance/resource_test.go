@@ -31,7 +31,7 @@ func init() {
 	})
 
 	region, err := acceptance.GetRandomRegionWithCaps([]string{
-		linodego.Vlans, linodego.VPCs, linodego.DiskEncryption,
+		linodego.CapabilityVlans, linodego.CapabilityVPCs,
 	})
 	if err != nil {
 		log.Fatal(err)
@@ -2514,6 +2514,9 @@ func TestAccResourceInstance_pgAssignment(t *testing.T) {
 }
 
 func TestAccResourceInstance_diskEncryption(t *testing.T) {
+	// TODO(LDE): Uncomment once LDE is available
+	t.Skip("Disk encryption is not yet available in prod.")
+
 	t.Parallel()
 
 	resName := "linode_instance.foobar"
@@ -2523,7 +2526,7 @@ func TestAccResourceInstance_diskEncryption(t *testing.T) {
 
 	// Resolve a region that supports disk encryption
 	targetRegion, err := acceptance.GetRandomRegionWithCaps(
-		[]string{linodego.Linodes, linodego.DiskEncryption},
+		[]string{linodego.CapabilityLinodes, linodego.CapabilityDiskEncryption},
 	)
 	if err != nil {
 		t.Fatal(err)
