@@ -50,10 +50,11 @@ func TestAccResourceInstanceDisk_basic_smoke(t *testing.T) {
 
 					resource.TestCheckResourceAttrSet(resName, "linode_id"),
 
-					resource.TestCheckResourceAttrPair(
-						resName, "disk_encryption",
-						"linode_instance.foobar", "disk_encryption",
-					),
+					// TODO(LDE): Uncomment once LDE is available
+					//resource.TestCheckResourceAttrPair(
+					//	resName, "disk_encryption",
+					//	"linode_instance.foobar", "disk_encryption",
+					//),
 				),
 			},
 			// Resize up

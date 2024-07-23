@@ -135,7 +135,10 @@ func TestAccResourceNodePool_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					checkNodePoolExists,
 					resource.TestCheckResourceAttr(resName, "type", "g6-standard-1"),
-					resource.TestCheckResourceAttrSet(resName, "disk_encryption"),
+
+					// TODO(LDE): Uncomment once LDE is available
+					// resource.TestCheckResourceAttrSet(resName, "disk_encryption"),
+
 					resource.TestCheckResourceAttr(resName, "tags.#", "2"),
 					resource.TestCheckResourceAttr(resName, "tags.0", "external"),
 					resource.TestCheckResourceAttr(resName, "tags.1", poolTag),

@@ -2554,7 +2554,9 @@ func TestAccResourceInstance_diskEncryption(t *testing.T) {
 					resource.TestCheckResourceAttr(resName, "type", "g6-nanode-1"),
 					resource.TestCheckResourceAttr(resName, "image", acceptance.TestImageLatest),
 					resource.TestCheckResourceAttr(resName, "region", testRegion),
-					resource.TestCheckResourceAttr(resName, "disk_encryption", "enabled"),
+
+					// TODO(LDE): Uncomment once LDE is available
+					// resource.TestCheckResourceAttr(resName, "disk_encryption", "enabled"),
 				),
 			},
 			{
@@ -2571,7 +2573,9 @@ func TestAccResourceInstance_diskEncryption(t *testing.T) {
 					resource.TestCheckResourceAttr(resName, "type", "g6-nanode-1"),
 					resource.TestCheckResourceAttr(resName, "image", acceptance.TestImageLatest),
 					resource.TestCheckResourceAttr(resName, "region", testRegion),
-					resource.TestCheckResourceAttr(resName, "disk_encryption", "disabled"),
+
+					// TODO(LDE): Uncomment once LDE is available
+					// resource.TestCheckResourceAttr(resName, "disk_encryption", "disabled"),
 				),
 			},
 
@@ -2591,7 +2595,9 @@ func TestAccResourceInstance_diskEncryption(t *testing.T) {
 					resource.TestCheckResourceAttr(resName, "type", "g6-nanode-1"),
 					resource.TestCheckResourceAttr(resName, "image", acceptance.TestImageLatest),
 					resource.TestCheckResourceAttr(resName, "region", testRegion),
-					resource.TestCheckResourceAttr(resName, "disk_encryption", "disabled"),
+
+					// TODO(LDE): Uncomment once LDE is available
+					// resource.TestCheckResourceAttr(resName, "disk_encryption", "disabled"),
 				),
 			},
 

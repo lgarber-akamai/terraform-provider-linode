@@ -185,7 +185,10 @@ func TestAccResourceLKECluster_basic_smoke(t *testing.T) {
 						resource.TestCheckResourceAttr(resourceClusterName, "pool.#", "1"),
 						resource.TestCheckResourceAttr(resourceClusterName, "pool.0.type", "g6-standard-2"),
 						resource.TestCheckResourceAttr(resourceClusterName, "pool.0.count", "3"),
-						resource.TestCheckResourceAttrSet(resourceClusterName, "pool.0.disk_encryption"),
+
+						// TODO(LDE): Uncomment once LDE is available
+						// resource.TestCheckResourceAttrSet(resourceClusterName, "pool.0.disk_encryption"),
+
 						resource.TestCheckResourceAttr(resourceClusterName, "pool.0.nodes.#", "3"),
 						resource.TestCheckResourceAttr(resourceClusterName, "control_plane.#", "1"),
 						resource.TestCheckResourceAttr(resourceClusterName, "control_plane.0.high_availability", "false"),
