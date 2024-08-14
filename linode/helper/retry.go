@@ -9,13 +9,9 @@ import (
 	"github.com/linode/linodego"
 )
 
-// Workaround for intermittent 5xx errors when retrieving a database from the API
-func Database502Retry() func(response *resty.Response, err error) bool {
-	databaseGetRegex, err := regexp.Compile("[A-Za-z0-9]+/databases/[a-z]+/instances/[0-9]+")
-	if err != nil {
-		log.Fatal(err)
-	}
-	return GenericRetryCondition(500, databaseGetRegex)
+// Global502Retry retries on intermittent 5xx errors on arbitrary endpoints from the API
+func Global502Retry(response *resty.Response, _ error) bool {
+	return response.StatusCode() == 502
 }
 
 func LinodeInstance500Retry() func(response *resty.Response, err error) bool {
@@ -53,7 +49,7 @@ func GenericRetryCondition(statusCode int, pathPattern *regexp.Regexp) func(resp
 }
 
 func ApplyAllRetryConditions(client *linodego.Client) {
-	client.AddRetryCondition(Database502Retry())
+	client.AddRetryCondition(Global502Retry)
 	client.AddRetryCondition(LinodeInstance500Retry())
 	client.AddRetryCondition(ImageUpload500Retry())
 }
