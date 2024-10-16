@@ -6,6 +6,7 @@ on:
     branches:
       - main
       - dev
+      - test/add_e2e_fw_to_lke_nodes_after_execution
 
 jobs:
   integration_tests:
