@@ -3,6 +3,7 @@ package helper
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
@@ -83,7 +84,7 @@ func FlattenDayOfWeek(day linodego.DatabaseDayOfWeek) string {
 }
 
 func CreateDatabaseEngineSlug(engine, version string) string {
-	return fmt.Sprintf("%s/%s", engine, version)
+	return fmt.Sprintf("%s/%s", engine, strings.Split(version, ".")[0])
 }
 
 func FlattenMaintenanceWindow(window linodego.MySQLDatabaseMaintenanceWindow) map[string]interface{} {

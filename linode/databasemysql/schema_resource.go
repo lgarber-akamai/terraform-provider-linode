@@ -57,24 +57,20 @@ var resourceSchema = map[string]*schema.Schema{
 		Type:        schema.TypeBool,
 		Description: "Whether the Managed Databases is encrypted.",
 		Optional:    true,
-		Default:     false,
+		Computed:    true,
 		ForceNew:    true,
 	},
 	"replication_type": {
 		Type:        schema.TypeString,
 		Description: "The replication method used for the Managed Database.",
 		Optional:    true,
-		Default:     "none",
 		ForceNew:    true,
-
-		ValidateDiagFunc: validation.ToDiagFunc(
-			validation.StringInSlice([]string{"none", "asynch", "semi_synch"}, false)),
 	},
 	"ssl_connection": {
 		Type:        schema.TypeBool,
 		Description: "Whether to require SSL credentials to establish a connection to the Managed Database.",
 		Optional:    true,
-		Default:     false,
+		Computed:    true,
 		ForceNew:    true,
 	},
 	"updates": {

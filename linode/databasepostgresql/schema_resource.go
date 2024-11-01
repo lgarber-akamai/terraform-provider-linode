@@ -59,11 +59,7 @@ var resourceSchema = map[string]*schema.Schema{
 			"Must be `none` for a single node cluster. " +
 			"Must be `asynch` or `semi_synch` for a high availability cluster.",
 		Optional: true,
-		Default:  "none",
 		ForceNew: true,
-		ValidateDiagFunc: validation.ToDiagFunc(validation.All(
-			validation.StringInSlice([]string{"none", "asynch", "semi_synch"}, false),
-		)),
 	},
 	"replication_commit_type": {
 		Type: schema.TypeString,
@@ -71,24 +67,20 @@ var resourceSchema = map[string]*schema.Schema{
 			"Must be `local` or `off` for the `asynch` replication type. " +
 			"Must be `on`, `remote_write`, or `remote_apply` for the `semi_synch` replication type.",
 		Optional: true,
-		Default:  "off",
 		ForceNew: true,
-		ValidateDiagFunc: validation.ToDiagFunc(validation.All(
-			validation.StringInSlice([]string{"on", "local", "remote_write", "remote_apply", "off"}, false),
-		)),
 	},
 	"encrypted": {
 		Type:        schema.TypeBool,
 		Description: "Whether the Managed Databases is encrypted.",
 		Optional:    true,
-		Default:     false,
+		Computed:    true,
 		ForceNew:    true,
 	},
 	"ssl_connection": {
 		Type:        schema.TypeBool,
 		Description: "Whether to require SSL credentials to establish a connection to the Managed Database.",
 		Optional:    true,
-		Default:     false,
+		Computed:    true,
 		ForceNew:    true,
 	},
 	"updates": {
