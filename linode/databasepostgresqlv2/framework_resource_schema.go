@@ -62,14 +62,14 @@ var frameworkResourceSchema = schema.Schema{
 			Required:    true,
 			Description: "A unique, user-defined string referring to the Managed Database.",
 			PlanModifiers: []planmodifier.String{
-				stringplanmodifier.RequiresReplace(),
+				stringplanmodifier.UseStateForUnknown(),
 			},
 		},
 		"engine_id": schema.StringAttribute{
 			Required:    true,
 			Description: "The unique ID of the database engine and version to use. (e.g. postgresql/16)",
 			PlanModifiers: []planmodifier.String{
-				stringplanmodifier.RequiresReplace(),
+				stringplanmodifier.UseStateForUnknown(),
 			},
 		},
 		"region": schema.StringAttribute{
@@ -83,7 +83,7 @@ var frameworkResourceSchema = schema.Schema{
 			Required:    true,
 			Description: "The Linode Instance type used by the Managed Database for its nodes.\n\n",
 			PlanModifiers: []planmodifier.String{
-				stringplanmodifier.RequiresReplace(),
+				stringplanmodifier.UseStateForUnknown(),
 			},
 		},
 
@@ -176,9 +176,6 @@ var frameworkResourceSchema = schema.Schema{
 		"version": schema.StringAttribute{
 			Description: "The Managed Database engine version.",
 			Computed:    true,
-			PlanModifiers: []planmodifier.String{
-				stringplanmodifier.UseStateForUnknown(),
-			},
 		},
 
 		"fork": schema.ObjectAttribute{
@@ -194,12 +191,6 @@ var frameworkResourceSchema = schema.Schema{
 			PlanModifiers:  []planmodifier.Object{objectplanmodifier.UseStateForUnknown()},
 		},
 
-		"fork_details": schema.ObjectAttribute{
-			Description:    "The details of the database that was forked from.",
-			Computed:       true,
-			AttributeTypes: forkDetailsAttributes,
-			PlanModifiers:  []planmodifier.Object{objectplanmodifier.UseStateForUnknown()},
-		},
 		"hosts": schema.ObjectAttribute{
 			AttributeTypes: hostsAttributes,
 			Computed:       true,

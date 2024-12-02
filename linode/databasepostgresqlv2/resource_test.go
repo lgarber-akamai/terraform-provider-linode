@@ -8,6 +8,8 @@ import (
 	"log"
 	"testing"
 
+	"github.com/linode/terraform-provider-linode/v2/linode/helper"
+
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/linode/linodego"
@@ -35,17 +37,16 @@ func init() {
 
 	testRegion = region
 
-	engines, err := client.ListDatabaseEngines(
+	engine, err := helper.ResolveValidDBEngine(
 		context.Background(),
-		&linodego.ListOptions{
-			Filter: "{\"engine\": \"postgresql\"}",
-		},
+		*client,
+		string(linodego.DatabaseEngineTypePostgres),
 	)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	testEngine = engines[0].ID
+	testEngine = engine.ID
 }
 
 func sweep(prefix string) error {

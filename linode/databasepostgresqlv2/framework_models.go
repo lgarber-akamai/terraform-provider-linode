@@ -2,9 +2,7 @@ package databasepostgresqlv2
 
 import (
 	"context"
-	"fmt"
 	"strconv"
-	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 
@@ -17,10 +15,7 @@ import (
 )
 
 type ModelFork struct {
-	Source types.Int64 `tfsdk:"source"`
-}
-
-type ModelForkDetails struct {
+	Source      types.Int64       `tfsdk:"source"`
 	RestoreTime timetypes.RFC3339 `tfsdk:"restore_time"`
 }
 
@@ -78,11 +73,8 @@ type Model struct {
 	Updated           timetypes.RFC3339 `tfsdk:"updated"`
 	Version           types.String      `tfsdk:"version"`
 
-	Hosts types.Object `tfsdk:"hosts"`
-
-	Fork        types.Object `tfsdk:"fork"`
-	ForkDetails types.Object `tfsdk:"fork_details"`
-
+	Hosts          types.Object `tfsdk:"hosts"`
+	Fork           types.Object `tfsdk:"fork"`
 	Updates        types.Object `tfsdk:"updates"`
 	PendingUpdates types.Set    `tfsdk:"pending_updates"`
 }
@@ -91,7 +83,11 @@ func (m *Model) Flatten(ctx context.Context, db *linodego.PostgresDatabase, pres
 	m.ID = helper.KeepOrUpdateString(m.ID, strconv.Itoa(db.ID), preserveKnown)
 
 	m.Label = helper.KeepOrUpdateString(m.Label, db.Label, preserveKnown)
-	m.EngineID = helper.KeepOrUpdateString(m.EngineID, fmt.Sprintf("%s/%s", db.Engine, strings.Split(db.Version, ".")[0]), preserveKnown)
+	m.EngineID = helper.KeepOrUpdateString(
+		m.EngineID,
+		helper.CreateDatabaseEngineSlug(db.Engine, db.Version),
+		preserveKnown,
+	)
 	m.Region = helper.KeepOrUpdateString(m.Region, db.Region, preserveKnown)
 	m.Type = helper.KeepOrUpdateString(m.Type, db.Type, preserveKnown)
 	m.AllowList = helper.KeepOrUpdateSet(
@@ -140,25 +136,23 @@ func (m *Model) Flatten(ctx context.Context, db *linodego.PostgresDatabase, pres
 	d.Append(rd...)
 	m.Hosts = helper.KeepOrUpdateValue(m.Hosts, hostsObject, preserveKnown)
 
-	forkObject, rd := types.ObjectValueFrom(
-		ctx,
-		forkAttributes,
-		&ModelFork{
-			Source: types.Int64Value(int64(db.Fork.Source)),
-		},
-	)
-	d.Append(rd...)
-	m.Fork = helper.KeepOrUpdateValue(m.Fork, forkObject, preserveKnown)
+	var forkObject types.Object
 
-	forkDetailsObject, rd := types.ObjectValueFrom(
-		ctx,
-		forkDetailsAttributes,
-		&ModelForkDetails{
-			RestoreTime: timetypes.NewRFC3339TimePointerValue(db.Fork.RestoreTime),
-		},
-	)
-	d.Append(rd...)
-	m.ForkDetails = helper.KeepOrUpdateValue(m.ForkDetails, forkDetailsObject, preserveKnown)
+	if db.Fork != nil {
+		forkObject, rd = types.ObjectValueFrom(
+			ctx,
+			forkAttributes,
+			&ModelFork{
+				Source:      types.Int64Value(int64(db.Fork.Source)),
+				RestoreTime: timetypes.NewRFC3339TimePointerValue(db.Fork.RestoreTime),
+			},
+		)
+		d.Append(rd...)
+	} else {
+		forkObject = types.ObjectNull(forkAttributes)
+	}
+
+	m.Fork = helper.KeepOrUpdateValue(m.Fork, forkObject, preserveKnown)
 
 	updatesObject, rd := types.ObjectValueFrom(
 		ctx,
@@ -226,7 +220,6 @@ func (m *Model) CopyFrom(ctx context.Context, other *Model, preserveKnown bool) 
 	m.Version = helper.KeepOrUpdateValue(m.Version, other.Version, preserveKnown)
 	m.Hosts = helper.KeepOrUpdateValue(m.Hosts, other.Hosts, preserveKnown)
 	m.Fork = helper.KeepOrUpdateValue(m.Fork, other.Fork, preserveKnown)
-	m.ForkDetails = helper.KeepOrUpdateValue(m.ForkDetails, other.ForkDetails, preserveKnown)
 	m.Updates = helper.KeepOrUpdateValue(m.Updates, other.Updates, preserveKnown)
 	m.PendingUpdates = helper.KeepOrUpdateValue(m.PendingUpdates, other.PendingUpdates, preserveKnown)
 }

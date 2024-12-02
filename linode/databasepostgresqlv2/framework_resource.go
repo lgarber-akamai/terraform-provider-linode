@@ -81,7 +81,7 @@ func (r *Resource) Create(
 		resp.Diagnostics.Append(data.AllowList.ElementsAs(ctx, &createOpts.AllowList, false)...)
 	}
 
-	if !data.ForkDetails.IsUnknown() && !data.Fork.IsNull() {
+	if !data.Fork.IsUnknown() && !data.Fork.IsNull() {
 		var forkModel ModelFork
 
 		resp.Diagnostics.Append(
@@ -306,8 +306,26 @@ func (r *Resource) Update(
 		if resp.Diagnostics.HasError() {
 			return
 		}
-
 	}
+
+	// TODO: Uncomment
+	//if !state.EngineID.Equal(plan.EngineID) {
+	//	engine, version, err := helper.ParseDatabaseEngineSlug(plan.EngineID.ValueString())
+	//	if err != nil {
+	//		resp.Diagnostics.AddError("Failed to parse database engine slug", err.Error())
+	//		return
+	//	}
+	//
+	//	if engine != state.Engine.ValueString() {
+	//		resp.Diagnostics.AddError(
+	//			"Cannot update engine component of engine_id",
+	//			fmt.Sprintf("%s != %s", engine, state.Engine.ValueString()),
+	//		)
+	//	}
+	//
+	//	shouldUpdate = true
+	//	updateOpts.Version = version
+	//}
 
 	// TODO: Support resizing the cluster
 
