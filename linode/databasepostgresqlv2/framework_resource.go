@@ -81,22 +81,19 @@ func (r *Resource) Create(
 		resp.Diagnostics.Append(data.AllowList.ElementsAs(ctx, &createOpts.AllowList, false)...)
 	}
 
-	if !data.Fork.IsUnknown() && !data.Fork.IsNull() {
-		var forkModel ModelFork
-
-		resp.Diagnostics.Append(
-			data.Fork.As(
-				ctx,
-				&forkModel,
-				basetypes.ObjectAsOptions{
-					UnhandledNullAsEmpty:    true,
-					UnhandledUnknownAsEmpty: true,
-				},
-			)...,
-		)
-
+	if !data.ForkSource.IsUnknown() && !data.ForkSource.IsNull() {
 		createOpts.Fork = &linodego.DatabaseFork{
-			Source: helper.FrameworkSafeInt64ToInt(forkModel.Source.ValueInt64(), &resp.Diagnostics),
+			Source: helper.FrameworkSafeInt64ToInt(data.ForkSource.ValueInt64(), &resp.Diagnostics),
+		}
+
+		if !data.ForkRestoreTime.IsUnknown() && !data.ForkRestoreTime.IsNull() {
+			restoreTime, d := data.ForkRestoreTime.ValueRFC3339Time()
+			resp.Diagnostics.Append(d...)
+			if resp.Diagnostics.HasError() {
+				return
+			}
+
+			createOpts.Fork.RestoreTime = &restoreTime
 		}
 	}
 

@@ -178,12 +178,24 @@ var frameworkResourceSchema = schema.Schema{
 			Computed:    true,
 		},
 
-		"fork": schema.ObjectAttribute{
-			AttributeTypes: forkAttributes,
-			Computed:       true,
-			Optional:       true,
-			PlanModifiers:  []planmodifier.Object{objectplanmodifier.UseStateForUnknown()},
+		"fork_source": schema.Int64Attribute{
+			Computed: true,
+			Optional: true,
+			PlanModifiers: []planmodifier.Int64{
+				int64planmodifier.UseStateForUnknown(),
+				int64planmodifier.RequiresReplace(),
+			},
 		},
+		"fork_restore_time": schema.StringAttribute{
+			Computed:   true,
+			Optional:   true,
+			CustomType: timetypes.RFC3339Type{},
+			PlanModifiers: []planmodifier.String{
+				stringplanmodifier.UseStateForUnknown(),
+				stringplanmodifier.RequiresReplace(),
+			},
+		},
+
 		"updates": schema.ObjectAttribute{
 			AttributeTypes: updatesAttributes,
 			Computed:       true,

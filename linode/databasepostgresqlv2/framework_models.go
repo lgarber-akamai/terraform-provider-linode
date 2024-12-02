@@ -14,11 +14,6 @@ import (
 	"github.com/linode/terraform-provider-linode/v2/linode/helper"
 )
 
-type ModelFork struct {
-	Source      types.Int64       `tfsdk:"source"`
-	RestoreTime timetypes.RFC3339 `tfsdk:"restore_time"`
-}
-
 type ModelHosts struct {
 	Primary   types.String `tfsdk:"primary"`
 	Secondary types.String `tfsdk:"secondary"`
@@ -73,8 +68,10 @@ type Model struct {
 	Updated           timetypes.RFC3339 `tfsdk:"updated"`
 	Version           types.String      `tfsdk:"version"`
 
+	ForkSource      types.Int64       `tfsdk:"fork_source"`
+	ForkRestoreTime timetypes.RFC3339 `tfsdk:"fork_restore_time"`
+
 	Hosts          types.Object `tfsdk:"hosts"`
-	Fork           types.Object `tfsdk:"fork"`
 	Updates        types.Object `tfsdk:"updates"`
 	PendingUpdates types.Set    `tfsdk:"pending_updates"`
 }
@@ -136,23 +133,32 @@ func (m *Model) Flatten(ctx context.Context, db *linodego.PostgresDatabase, pres
 	d.Append(rd...)
 	m.Hosts = helper.KeepOrUpdateValue(m.Hosts, hostsObject, preserveKnown)
 
-	var forkObject types.Object
-
 	if db.Fork != nil {
-		forkObject, rd = types.ObjectValueFrom(
-			ctx,
-			forkAttributes,
-			&ModelFork{
-				Source:      types.Int64Value(int64(db.Fork.Source)),
-				RestoreTime: timetypes.NewRFC3339TimePointerValue(db.Fork.RestoreTime),
-			},
+		m.ForkSource = helper.KeepOrUpdateInt64(
+			m.ForkSource,
+			int64(db.Fork.Source),
+			preserveKnown,
 		)
-		d.Append(rd...)
-	} else {
-		forkObject = types.ObjectNull(forkAttributes)
-	}
 
-	m.Fork = helper.KeepOrUpdateValue(m.Fork, forkObject, preserveKnown)
+		m.ForkRestoreTime = helper.KeepOrUpdateValue(
+			m.ForkRestoreTime,
+			timetypes.NewRFC3339TimePointerValue(db.Fork.RestoreTime),
+			preserveKnown,
+		)
+
+	} else {
+		m.ForkSource = helper.KeepOrUpdateValue(
+			m.ForkSource,
+			types.Int64Null(),
+			preserveKnown,
+		)
+
+		m.ForkRestoreTime = helper.KeepOrUpdateValue(
+			m.ForkRestoreTime,
+			timetypes.NewRFC3339Null(),
+			preserveKnown,
+		)
+	}
 
 	updatesObject, rd := types.ObjectValueFrom(
 		ctx,
@@ -219,7 +225,8 @@ func (m *Model) CopyFrom(ctx context.Context, other *Model, preserveKnown bool) 
 	m.Updated = helper.KeepOrUpdateValue(m.Updated, other.Updated, preserveKnown)
 	m.Version = helper.KeepOrUpdateValue(m.Version, other.Version, preserveKnown)
 	m.Hosts = helper.KeepOrUpdateValue(m.Hosts, other.Hosts, preserveKnown)
-	m.Fork = helper.KeepOrUpdateValue(m.Fork, other.Fork, preserveKnown)
+	m.ForkSource = helper.KeepOrUpdateValue(m.ForkSource, other.ForkSource, preserveKnown)
+	m.ForkRestoreTime = helper.KeepOrUpdateValue(m.ForkRestoreTime, other.ForkRestoreTime, preserveKnown)
 	m.Updates = helper.KeepOrUpdateValue(m.Updates, other.Updates, preserveKnown)
 	m.PendingUpdates = helper.KeepOrUpdateValue(m.PendingUpdates, other.PendingUpdates, preserveKnown)
 }
