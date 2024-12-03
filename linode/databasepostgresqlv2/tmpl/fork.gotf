@@ -1,0 +1,19 @@
+{{ define "database_postgresql_v2_complex" }}
+
+resource "linode_database_postgresql_v2" "source" {
+    label = "{{.Label}}"
+    region = "{{ .Region }}"
+    type = "{{ .Type }}"
+    engine_id = "{{ .EngineID }}"
+}
+
+resource "linode_database_postgresql_v2" "fork" {
+    label = "{{.Label}}"
+    region = "{{ .Region }}"
+    type = "{{ .Type }}"
+    engine_id = "{{ .EngineID }}"
+
+    fork_source = linode_database_postgresql_v2.source.id
+}
+
+{{ end }}

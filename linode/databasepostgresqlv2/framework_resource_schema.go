@@ -97,7 +97,6 @@ var frameworkResourceSchema = schema.Schema{
 			PlanModifiers: []planmodifier.Set{
 				setplanmodifier.UseStateForUnknown(),
 			},
-			// TODO: Add IP validation?
 		},
 		"cluster_size": schema.Int64Attribute{
 			Optional:    true,
@@ -179,7 +178,6 @@ var frameworkResourceSchema = schema.Schema{
 		},
 
 		"fork_source": schema.Int64Attribute{
-			Computed: true,
 			Optional: true,
 			PlanModifiers: []planmodifier.Int64{
 				int64planmodifier.UseStateForUnknown(),
@@ -187,7 +185,6 @@ var frameworkResourceSchema = schema.Schema{
 			},
 		},
 		"fork_restore_time": schema.StringAttribute{
-			Computed:   true,
 			Optional:   true,
 			CustomType: timetypes.RFC3339Type{},
 			PlanModifiers: []planmodifier.String{

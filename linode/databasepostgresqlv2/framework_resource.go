@@ -16,7 +16,7 @@ import (
 
 const (
 	DefaultCreateTimeout = 60 * time.Minute
-	DefaultUpdateTimeout = 15 * time.Minute
+	DefaultUpdateTimeout = 60 * time.Minute
 	DefaultDeleteTimeout = 5 * time.Minute
 )
 
@@ -146,12 +146,13 @@ func (r *Resource) Create(
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 
-	if _, err := createPoller.WaitForFinished(ctx, int(createTimeout.Seconds())); err != nil {
-		resp.Diagnostics.AddError(
-			"Failed to wait for PostgreSQL database to finish creating",
-			err.Error(),
-		)
-	}
+	// TODO: Uncomment this
+	//if _, err := createPoller.WaitForFinished(ctx, int(createTimeout.Seconds())); err != nil {
+	//	resp.Diagnostics.AddError(
+	//		"Failed to wait for PostgreSQL database to finish creating",
+	//		err.Error(),
+	//	)
+	//}
 }
 
 func (r *Resource) Read(
@@ -323,6 +324,31 @@ func (r *Resource) Update(
 		plan.Flatten(ctx, db, false)
 
 		// TODO: Poll for update event to complete
+		err = client.WaitForDatabaseStatus(
+			ctx,
+			id,
+			linodego.DatabaseEngineTypePostgres,
+			linodego.DatabaseStatusActive,
+			60*60,
+		)
+		if err != nil {
+			resp.Diagnostics.AddError(
+				fmt.Sprintf("Failed to wait for database(%d) active", id),
+				err.Error(),
+			)
+			return
+		}
+
+		db, err = client.GetPostgresDatabase(ctx, id)
+		if err != nil {
+			resp.Diagnostics.AddError(
+				fmt.Sprintf("Failed to refresh database (%d)", id),
+				err.Error(),
+			)
+			return
+		}
+
+		plan.Flatten(ctx, db, false)
 	}
 
 	plan.CopyFrom(&state, true)

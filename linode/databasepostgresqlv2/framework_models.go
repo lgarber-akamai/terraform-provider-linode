@@ -269,10 +269,10 @@ func (m *Model) GetAllowList(ctx context.Context, d diag.Diagnostics) []string {
 	var result []string
 
 	d.Append(
-		m.Updates.As(
+		m.AllowList.ElementsAs(
 			ctx,
 			&result,
-			basetypes.ObjectAsOptions{UnhandledUnknownAsEmpty: true},
+			false,
 		)...,
 	)
 
