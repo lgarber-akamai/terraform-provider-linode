@@ -101,8 +101,6 @@ func (r *Resource) Create(
 		return
 	}
 
-	data.Flatten(ctx, db, true)
-
 	createPoller.EntityID = db.ID
 
 	// The `updates` field can only be changed using PUT requests
@@ -135,16 +133,7 @@ func (r *Resource) Create(
 		}
 	}
 
-	// We call this twice to ensure the state isn't broken in the case of an update failure
-	data.Flatten(ctx, db, true)
-
 	tflog.Debug(ctx, "Waiting for database to finish provisioning")
-
-	// IDs should always be overridden during creation (see #1085)
-	// TODO: Remove when Crossplane empty string ID issue is resolved
-	data.ID = types.StringValue(strconv.Itoa(db.ID))
-
-	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 
 	if _, err := createPoller.WaitForFinished(ctx, int(createTimeout.Seconds())); err != nil {
 		resp.Diagnostics.AddError(
@@ -152,6 +141,20 @@ func (r *Resource) Create(
 			err.Error(),
 		)
 	}
+
+	db, err = client.GetPostgresDatabase(ctx, db.ID)
+	if err != nil {
+		resp.Diagnostics.AddError("Failed to refresh postgresql database", err.Error())
+		return
+	}
+
+	data.Flatten(ctx, db, true)
+
+	// IDs should always be overridden during creation (see #1085)
+	// TODO: Remove when Crossplane empty string ID issue is resolved
+	data.ID = types.StringValue(strconv.Itoa(db.ID))
+
+	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *Resource) Read(
