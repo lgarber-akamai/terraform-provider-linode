@@ -113,7 +113,6 @@ func TestAccResource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resName, "allow_list.0", "0.0.0.0/0"),
 
 					resource.TestCheckResourceAttrSet(resName, "hosts.primary"),
-					resource.TestCheckResourceAttr(resName, "hosts.secondary", ""),
 
 					resource.TestCheckNoResourceAttr(resName, "fork_source"),
 					resource.TestCheckNoResourceAttr(resName, "fork_restore_time"),
@@ -180,7 +179,7 @@ func TestAccResource_complex(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resName, "members.%"),
 					resource.TestCheckResourceAttr(resName, "platform", "rdbms-default"),
 					resource.TestCheckResourceAttrSet(resName, "port"),
-					// resource.TestCheckResourceAttr(resName, "status", "active"),
+					resource.TestCheckResourceAttr(resName, "status", "active"),
 					resource.TestCheckResourceAttrSet(resName, "updated"),
 					resource.TestCheckResourceAttrSet(resName, "version"),
 
@@ -234,7 +233,7 @@ func TestAccResource_complex(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resName, "members.%"),
 					resource.TestCheckResourceAttr(resName, "platform", "rdbms-default"),
 					resource.TestCheckResourceAttrSet(resName, "port"),
-					// resource.TestCheckResourceAttr(resName, "status", "active"),
+					resource.TestCheckResourceAttr(resName, "status", "active"),
 					resource.TestCheckResourceAttrSet(resName, "updated"),
 					resource.TestCheckResourceAttrSet(resName, "version"),
 
@@ -242,10 +241,9 @@ func TestAccResource_complex(t *testing.T) {
 					resource.TestCheckResourceAttr(resName, "allow_list.0", "10.0.0.4/32"),
 
 					resource.TestCheckResourceAttrSet(resName, "hosts.primary"),
-					resource.TestCheckResourceAttrSet(resName, "hosts.secondary"),
 
-					resource.TestCheckResourceAttr(resName, "fork_source", "0"),
-					resource.TestCheckResourceAttrSet(resName, "fork_restore_time"),
+					resource.TestCheckNoResourceAttr(resName, "fork_source"),
+					resource.TestCheckNoResourceAttr(resName, "fork_restore_time"),
 
 					resource.TestCheckResourceAttr(resName, "updates.hour_of_day", "2"),
 					resource.TestCheckResourceAttr(resName, "updates.day_of_week", "3"),
@@ -303,7 +301,6 @@ func TestAccResource_fork(t *testing.T) {
 					resource.TestCheckResourceAttr(resNameSource, "allow_list.#", "1"),
 					resource.TestCheckResourceAttr(resNameSource, "allow_list.0", "0.0.0.0/0"),
 					resource.TestCheckResourceAttrSet(resNameSource, "hosts.primary"),
-					resource.TestCheckResourceAttr(resNameSource, "hosts.secondary", ""),
 					resource.TestCheckNoResourceAttr(resNameSource, "fork_source"),
 					resource.TestCheckNoResourceAttr(resNameSource, "fork_restore_time"),
 					resource.TestCheckResourceAttrSet(resNameSource, "updates.day_of_week"),
@@ -353,7 +350,7 @@ func TestAccResource_fork(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resNameSource, "oldest_restore_time"),
 
 					resource.TestCheckResourceAttrSet(resNameFork, "id"),
-					resource.TestCheckResourceAttr(resNameFork, "label", label),
+					resource.TestCheckResourceAttr(resNameFork, "label", label+"-fork"),
 					resource.TestCheckResourceAttr(resNameFork, "engine_id", testEngine),
 					resource.TestCheckResourceAttr(resNameFork, "region", testRegion),
 					resource.TestCheckResourceAttr(resNameFork, "type", "g6-nanode-1"),
@@ -371,7 +368,6 @@ func TestAccResource_fork(t *testing.T) {
 					resource.TestCheckResourceAttr(resNameFork, "allow_list.#", "1"),
 					resource.TestCheckResourceAttr(resNameFork, "allow_list.0", "0.0.0.0/0"),
 					resource.TestCheckResourceAttrSet(resNameFork, "hosts.primary"),
-					resource.TestCheckResourceAttr(resNameFork, "hosts.secondary", ""),
 					resource.TestCheckResourceAttr(resNameFork, "fork_source", strconv.Itoa(dbSource.ID)),
 					resource.TestCheckResourceAttrSet(resNameFork, "fork_restore_time"),
 					resource.TestCheckResourceAttrSet(resNameFork, "updates.day_of_week"),
