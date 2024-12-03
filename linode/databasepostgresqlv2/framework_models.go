@@ -234,7 +234,7 @@ func (m *Model) CopyFrom(other *Model, preserveKnown bool) {
 
 // GetFork returns the linodego.DatabaseFork for this model if specified, else nil.
 func (m *Model) GetFork(d diag.Diagnostics) *linodego.DatabaseFork {
-	var result *linodego.DatabaseFork
+	var result linodego.DatabaseFork
 
 	isSpecified := false
 
@@ -257,7 +257,7 @@ func (m *Model) GetFork(d diag.Diagnostics) *linodego.DatabaseFork {
 		return nil
 	}
 
-	return result
+	return &result
 }
 
 // GetAllowList returns the allow list slice for this model if specified, else nil.
