@@ -4,6 +4,8 @@ import (
 	"context"
 	"strconv"
 
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
+
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -26,15 +28,13 @@ type ModelUpdates struct {
 	HourOfDay types.Int64  `tfsdk:"hour_of_day"`
 }
 
-func (m ModelUpdates) ToLinodego() (linodego.DatabaseMaintenanceWindow, diag.Diagnostics) {
-	var d diag.Diagnostics
-
-	return linodego.DatabaseMaintenanceWindow{
+func (m ModelUpdates) ToLinodego(d diag.Diagnostics) *linodego.DatabaseMaintenanceWindow {
+	return &linodego.DatabaseMaintenanceWindow{
 		DayOfWeek: linodego.DatabaseDayOfWeek(helper.FrameworkSafeInt64ToInt(m.DayOfWeek.ValueInt64(), &d)),
 		Duration:  helper.FrameworkSafeInt64ToInt(m.Duration.ValueInt64(), &d),
 		Frequency: linodego.DatabaseMaintenanceFrequency(m.Frequency.ValueString()),
 		HourOfDay: helper.FrameworkSafeInt64ToInt(m.HourOfDay.ValueInt64(), &d),
-	}, d
+	}
 }
 
 type ModelPendingUpdate struct {
@@ -87,6 +87,12 @@ func (m *Model) Flatten(ctx context.Context, db *linodego.PostgresDatabase, pres
 	)
 	m.Region = helper.KeepOrUpdateString(m.Region, db.Region, preserveKnown)
 	m.Type = helper.KeepOrUpdateString(m.Type, db.Type, preserveKnown)
+	m.ClusterSize = helper.KeepOrUpdateInt64(m.ClusterSize, int64(db.ClusterSize), preserveKnown)
+	m.SSLConnection = helper.KeepOrUpdateBool(m.SSLConnection, db.SSLConnection, preserveKnown)
+	m.Created = helper.KeepOrUpdateValue(m.Created, timetypes.NewRFC3339TimePointerValue(db.Created), preserveKnown)
+	m.Encrypted = helper.KeepOrUpdateBool(m.Encrypted, db.Encrypted, preserveKnown)
+	m.Engine = helper.KeepOrUpdateString(m.Engine, db.Engine, preserveKnown)
+
 	m.AllowList = helper.KeepOrUpdateSet(
 		types.StringType,
 		m.AllowList,
@@ -97,11 +103,6 @@ func (m *Model) Flatten(ctx context.Context, db *linodego.PostgresDatabase, pres
 	if d.HasError() {
 		return
 	}
-	m.ClusterSize = helper.KeepOrUpdateInt64(m.ClusterSize, int64(db.ClusterSize), preserveKnown)
-	m.SSLConnection = helper.KeepOrUpdateBool(m.SSLConnection, db.SSLConnection, preserveKnown)
-	m.Created = helper.KeepOrUpdateValue(m.Created, timetypes.NewRFC3339TimePointerValue(db.Created), preserveKnown)
-	m.Encrypted = helper.KeepOrUpdateBool(m.Encrypted, db.Encrypted, preserveKnown)
-	m.Engine = helper.KeepOrUpdateString(m.Engine, db.Engine, preserveKnown)
 
 	membersCasted := helper.MapMap(
 		db.Members,
@@ -229,4 +230,70 @@ func (m *Model) CopyFrom(ctx context.Context, other *Model, preserveKnown bool) 
 	m.ForkRestoreTime = helper.KeepOrUpdateValue(m.ForkRestoreTime, other.ForkRestoreTime, preserveKnown)
 	m.Updates = helper.KeepOrUpdateValue(m.Updates, other.Updates, preserveKnown)
 	m.PendingUpdates = helper.KeepOrUpdateValue(m.PendingUpdates, other.PendingUpdates, preserveKnown)
+}
+
+// GetFork returns the linodego.DatabaseFork for this model if specified, else nil.
+func (m *Model) GetFork(d diag.Diagnostics) *linodego.DatabaseFork {
+	var result *linodego.DatabaseFork
+
+	isSpecified := false
+
+	if !m.ForkSource.IsUnknown() && !m.ForkSource.IsNull() {
+		isSpecified = true
+
+		result.Source = helper.FrameworkSafeInt64ToInt(m.ForkSource.ValueInt64(), &d)
+	}
+
+	if !m.ForkRestoreTime.IsUnknown() && !m.ForkRestoreTime.IsNull() {
+		isSpecified = true
+
+		restoreTime, rd := m.ForkRestoreTime.ValueRFC3339Time()
+		d.Append(rd...)
+
+		result.RestoreTime = &restoreTime
+	}
+
+	if d.HasError() || !isSpecified {
+		return nil
+	}
+
+	return result
+}
+
+// GetAllowList returns the allow list slice for this model if specified, else nil.
+func (m *Model) GetAllowList(ctx context.Context, d diag.Diagnostics) []string {
+	if m.AllowList.IsUnknown() || m.AllowList.IsNull() {
+		return nil
+	}
+
+	var result []string
+
+	d.Append(
+		m.Updates.As(
+			ctx,
+			&result,
+			basetypes.ObjectAsOptions{UnhandledUnknownAsEmpty: true},
+		)...,
+	)
+
+	return result
+}
+
+// GetUpdates returns the ModelUpdates for this model if specified, else nil.
+func (m *Model) GetUpdates(ctx context.Context, d diag.Diagnostics) *ModelUpdates {
+	if m.Updates.IsUnknown() || m.Updates.IsNull() {
+		return nil
+	}
+
+	var result ModelUpdates
+
+	d.Append(
+		m.Updates.As(
+			ctx,
+			&result,
+			basetypes.ObjectAsOptions{UnhandledUnknownAsEmpty: true},
+		)...,
+	)
+
+	return &result
 }

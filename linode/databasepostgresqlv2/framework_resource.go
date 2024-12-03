@@ -7,13 +7,9 @@ import (
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
-
-	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
-
-	"github.com/hashicorp/terraform-plugin-log/tflog"
-
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/linode/linodego"
 	"github.com/linode/terraform-provider-linode/v2/linode/helper"
 )
@@ -75,29 +71,10 @@ func (r *Resource) Create(
 		Type:        data.Type.ValueString(),
 		Engine:      data.EngineID.ValueString(),
 		ClusterSize: helper.FrameworkSafeInt64ToInt(data.ClusterSize.ValueInt64(), &resp.Diagnostics),
+		Fork:        data.GetFork(resp.Diagnostics),
+		AllowList:   data.GetAllowList(ctx, resp.Diagnostics),
 	}
 
-	if !data.AllowList.IsNull() {
-		resp.Diagnostics.Append(data.AllowList.ElementsAs(ctx, &createOpts.AllowList, false)...)
-	}
-
-	if !data.ForkSource.IsUnknown() && !data.ForkSource.IsNull() {
-		createOpts.Fork = &linodego.DatabaseFork{
-			Source: helper.FrameworkSafeInt64ToInt(data.ForkSource.ValueInt64(), &resp.Diagnostics),
-		}
-
-		if !data.ForkRestoreTime.IsUnknown() && !data.ForkRestoreTime.IsNull() {
-			restoreTime, d := data.ForkRestoreTime.ValueRFC3339Time()
-			resp.Diagnostics.Append(d...)
-			if resp.Diagnostics.HasError() {
-				return
-			}
-
-			createOpts.Fork.RestoreTime = &restoreTime
-		}
-	}
-
-	// Handles all errors relevant to create options
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -129,31 +106,21 @@ func (r *Resource) Create(
 	createPoller.EntityID = db.ID
 
 	// The `updates` field can only be changed using PUT requests
-	if !data.Updates.IsUnknown() && !data.Updates.IsNull() {
-		var updates ModelUpdates
+	updates := data.GetUpdates(ctx, resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
-		resp.Diagnostics.Append(
-			data.Updates.As(
-				ctx,
-				&updates,
-				basetypes.ObjectAsOptions{UnhandledUnknownAsEmpty: true},
-			)...,
-		)
+	if updates != nil {
+		updateOpts := linodego.PostgresUpdateOptions{Updates: updates.ToLinodego(resp.Diagnostics)}
 		if resp.Diagnostics.HasError() {
 			return
 		}
-
-		updatesLinodego, d := updates.ToLinodego()
-		resp.Diagnostics.Append(d...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-
-		updateOpts := linodego.PostgresUpdateOptions{Updates: &updatesLinodego}
 
 		tflog.Debug(ctx, "client.UpdatePostgresDatabase(...)", map[string]any{
 			"options": updateOpts,
 		})
+
 		db, err = client.UpdatePostgresDatabase(
 			ctx,
 			db.ID,
@@ -268,63 +235,73 @@ func (r *Resource) Update(
 	var updateOpts linodego.PostgresUpdateOptions
 	shouldUpdate := false
 
+	// `label` field updates
 	if !state.Label.Equal(plan.Label) {
 		shouldUpdate = true
 		updateOpts.Label = plan.Label.ValueString()
 	}
 
+	// `allow_list` field updates
 	if !state.AllowList.Equal(plan.AllowList) {
 		shouldUpdate = true
 
-		var allowList []string
+		allowList := plan.GetAllowList(ctx, resp.Diagnostics)
+		if resp.Diagnostics.HasError() {
+			return
+		}
 
 		updateOpts.AllowList = &allowList
-
-		plan.AllowList.ElementsAs(ctx, &allowList, false)
 	}
 
+	// `type` field updates
 	if !state.Type.Equal(plan.Type) {
 		shouldUpdate = true
 		updateOpts.Type = plan.Type.ValueString()
 	}
 
+	// `updates` field updates
 	if !state.Updates.Equal(plan.Updates) {
 		shouldUpdate = true
 
-		var updates ModelUpdates
+		updates := plan.GetUpdates(ctx, resp.Diagnostics)
+		if resp.Diagnostics.HasError() {
+			return
+		}
 
-		resp.Diagnostics.Append(
-			plan.Updates.As(
-				ctx,
-				&updates,
-				basetypes.ObjectAsOptions{UnhandledUnknownAsEmpty: true},
-			)...,
-		)
+		updateOpts.Updates = updates.ToLinodego(resp.Diagnostics)
 		if resp.Diagnostics.HasError() {
 			return
 		}
 	}
 
-	// TODO: Uncomment
-	//if !state.EngineID.Equal(plan.EngineID) {
-	//	engine, version, err := helper.ParseDatabaseEngineSlug(plan.EngineID.ValueString())
-	//	if err != nil {
-	//		resp.Diagnostics.AddError("Failed to parse database engine slug", err.Error())
-	//		return
-	//	}
-	//
-	//	if engine != state.Engine.ValueString() {
-	//		resp.Diagnostics.AddError(
-	//			"Cannot update engine component of engine_id",
-	//			fmt.Sprintf("%s != %s", engine, state.Engine.ValueString()),
-	//		)
-	//	}
-	//
-	//	shouldUpdate = true
-	//	updateOpts.Version = version
-	//}
+	// `engine_id` field updates
+	if !state.EngineID.Equal(plan.EngineID) {
+		engine, version, err := helper.ParseDatabaseEngineSlug(plan.EngineID.ValueString())
+		if err != nil {
+			resp.Diagnostics.AddError("Failed to parse database engine slug", err.Error())
+			return
+		}
 
-	// TODO: Support resizing the cluster
+		if engine != state.Engine.ValueString() {
+			resp.Diagnostics.AddError(
+				"Cannot update engine component of engine_id",
+				fmt.Sprintf("%s != %s", engine, state.Engine.ValueString()),
+			)
+		}
+
+		shouldUpdate = true
+		updateOpts.Version = version
+	}
+
+	// `cluster_size` field updates
+	if !state.ClusterSize.Equal(plan.ClusterSize) {
+		shouldUpdate = true
+
+		updateOpts.ClusterSize = helper.FrameworkSafeInt64ToInt(plan.ClusterSize.ValueInt64(), &resp.Diagnostics)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+	}
 
 	if shouldUpdate {
 		id := helper.FrameworkSafeStringToInt(plan.ID.ValueString(), &resp.Diagnostics)
@@ -345,7 +322,7 @@ func (r *Resource) Update(
 		}
 		plan.Flatten(ctx, db, false)
 
-		// TODO: Poll for updates to complete
+		// TODO: Poll for update event to complete
 	}
 
 	plan.CopyFrom(ctx, &state, true)

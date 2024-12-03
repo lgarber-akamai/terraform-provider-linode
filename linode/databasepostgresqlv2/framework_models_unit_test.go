@@ -54,7 +54,7 @@ var (
 		},
 		Created: &currentTime,
 		Updated: &currentTime,
-		Fork: linodego.DatabaseFork{
+		Fork: &linodego.DatabaseFork{
 			Source:      12345,
 			RestoreTime: &currentTime,
 		},
@@ -68,8 +68,6 @@ func TestModel_Flatten(t *testing.T) {
 
 	model.Flatten(context.Background(), &testDB, false)
 
-	fork := helper.FrameworkObjectAs[databasepostgresqlv2.ModelFork](t, model.Fork)
-	forkDetails := helper.FrameworkObjectAs[databasepostgresqlv2.ModelForkDetails](t, model.ForkDetails)
 	hosts := helper.FrameworkObjectAs[databasepostgresqlv2.ModelHosts](t, model.Hosts)
 	updates := helper.FrameworkObjectAs[databasepostgresqlv2.ModelUpdates](t, model.Updates)
 
@@ -86,6 +84,9 @@ func TestModel_Flatten(t *testing.T) {
 	require.Equal(t, "foobar", model.Platform.ValueString())
 	require.Equal(t, int64(1234), model.Port.ValueInt64())
 	require.Equal(t, true, model.SSLConnection.ValueBool())
+
+	require.Equal(t, int64(12345), model.ForkSource.ValueInt64())
+	require.Equal(t, currentTimeFWValue, model.ForkRestoreTime)
 
 	require.Equal(t, "1.2.3.4", hosts.Primary.ValueString())
 	require.Equal(t, "4.3.2.1", hosts.Secondary.ValueString())
@@ -115,8 +116,6 @@ func TestModel_Flatten(t *testing.T) {
 	require.False(t, d.HasError(), d.Errors())
 
 	require.True(t, model.PendingUpdates.Elements()[0].Equal(expectedPendingElement))
-	require.Equal(t, int64(12345), fork.Source.ValueInt64())
-	require.Equal(t, currentTimeFWValue, forkDetails.RestoreTime)
 }
 
 func TestModel_Copy(t *testing.T) {
