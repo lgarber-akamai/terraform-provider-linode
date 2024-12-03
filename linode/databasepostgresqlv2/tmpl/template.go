@@ -44,3 +44,16 @@ func Complex(
 		data,
 	)
 }
+
+func Fork(t testing.TB, label, region, engine, nodeType string) string {
+	return acceptance.ExecuteTemplate(
+		t,
+		"database_postgresql_v2_fork",
+		TemplateData{
+			Label:    label,
+			Region:   region,
+			EngineID: engine,
+			Type:     nodeType,
+		},
+	)
+}

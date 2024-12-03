@@ -1,4 +1,4 @@
-{{ define "database_postgresql_v2_complex" }}
+{{ define "database_postgresql_v2_fork" }}
 
 resource "linode_database_postgresql_v2" "source" {
     label = "{{.Label}}"
