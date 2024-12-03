@@ -325,7 +325,7 @@ func (r *Resource) Update(
 		// TODO: Poll for update event to complete
 	}
 
-	plan.CopyFrom(ctx, &state, true)
+	plan.CopyFrom(&state, true)
 
 	// Workaround for Crossplane issue where ID is not
 	// properly populated in plan

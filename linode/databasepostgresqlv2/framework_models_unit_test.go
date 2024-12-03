@@ -122,7 +122,7 @@ func TestModel_Copy(t *testing.T) {
 	var modelOld, modelNew databasepostgresqlv2.Model
 	modelOld.Flatten(context.Background(), &testDB, false)
 
-	modelNew.CopyFrom(context.Background(), &modelOld, false)
+	modelNew.CopyFrom(&modelOld, false)
 
 	require.Equal(t, modelOld, modelNew)
 }

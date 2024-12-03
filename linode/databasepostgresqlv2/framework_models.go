@@ -206,7 +206,7 @@ func (m *Model) Flatten(ctx context.Context, db *linodego.PostgresDatabase, pres
 	return nil
 }
 
-func (m *Model) CopyFrom(ctx context.Context, other *Model, preserveKnown bool) {
+func (m *Model) CopyFrom(other *Model, preserveKnown bool) {
 	m.ID = helper.KeepOrUpdateValue(m.ID, other.ID, preserveKnown)
 	m.Engine = helper.KeepOrUpdateValue(m.Engine, other.Engine, preserveKnown)
 	m.EngineID = helper.KeepOrUpdateValue(m.EngineID, other.EngineID, preserveKnown)
