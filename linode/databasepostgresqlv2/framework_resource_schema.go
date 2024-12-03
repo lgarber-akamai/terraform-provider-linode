@@ -186,6 +186,7 @@ var frameworkResourceSchema = schema.Schema{
 		},
 		"fork_restore_time": schema.StringAttribute{
 			Optional:   true,
+			Computed:   true,
 			CustomType: timetypes.RFC3339Type{},
 			PlanModifiers: []planmodifier.String{
 				stringplanmodifier.UseStateForUnknown(),
