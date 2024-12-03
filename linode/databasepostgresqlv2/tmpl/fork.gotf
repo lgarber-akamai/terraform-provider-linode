@@ -8,7 +8,7 @@ resource "linode_database_postgresql_v2" "source" {
 }
 
 resource "linode_database_postgresql_v2" "fork" {
-    label = "{{.Label}}"
+    label = "{{.Label}}-fork"
     region = "{{ .Region }}"
     type = "{{ .Type }}"
     engine_id = "{{ .EngineID }}"
