@@ -1,11 +1,6 @@
 {{ define "database_postgresql_v2_fork" }}
 
-resource "linode_database_postgresql_v2" "source" {
-    label = "{{.Label}}"
-    region = "{{ .Region }}"
-    type = "{{ .Type }}"
-    engine_id = "{{ .EngineID }}"
-}
+{{ template "database_postgresql_v2_basic" . }}
 
 resource "linode_database_postgresql_v2" "fork" {
     label = "{{.Label}}-fork"
@@ -13,7 +8,7 @@ resource "linode_database_postgresql_v2" "fork" {
     type = "{{ .Type }}"
     engine_id = "{{ .EngineID }}"
 
-    fork_source = linode_database_postgresql_v2.source.id
+    fork_source = linode_database_postgresql_v2.foobar.id
 }
 
 {{ end }}

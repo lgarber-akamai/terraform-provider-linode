@@ -146,13 +146,12 @@ func (r *Resource) Create(
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 
-	// TODO: Uncomment this
-	//if _, err := createPoller.WaitForFinished(ctx, int(createTimeout.Seconds())); err != nil {
-	//	resp.Diagnostics.AddError(
-	//		"Failed to wait for PostgreSQL database to finish creating",
-	//		err.Error(),
-	//	)
-	//}
+	if _, err := createPoller.WaitForFinished(ctx, int(createTimeout.Seconds())); err != nil {
+		resp.Diagnostics.AddError(
+			"Failed to wait for PostgreSQL database to finish creating",
+			err.Error(),
+		)
+	}
 }
 
 func (r *Resource) Read(

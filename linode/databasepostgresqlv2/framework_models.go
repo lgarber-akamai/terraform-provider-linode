@@ -57,19 +57,20 @@ type Model struct {
 	ClusterSize   types.Int64 `tfsdk:"cluster_size"`
 	SSLConnection types.Bool  `tfsdk:"ssl_connection"`
 
-	Created           timetypes.RFC3339 `tfsdk:"created"`
-	Encrypted         types.Bool        `tfsdk:"encrypted"`
-	Engine            types.String      `tfsdk:"engine"`
-	Members           types.Map         `tfsdk:"members"`
-	OldestRestoreTime timetypes.RFC3339 `tfsdk:"oldest_restore_time"`
-	Platform          types.String      `tfsdk:"platform"`
-	Port              types.Int64       `tfsdk:"port"`
-	Status            types.String      `tfsdk:"status"`
-	Updated           timetypes.RFC3339 `tfsdk:"updated"`
-	Version           types.String      `tfsdk:"version"`
+	Created   timetypes.RFC3339 `tfsdk:"created"`
+	Encrypted types.Bool        `tfsdk:"encrypted"`
+	Engine    types.String      `tfsdk:"engine"`
+	Members   types.Map         `tfsdk:"members"`
+	Platform  types.String      `tfsdk:"platform"`
+	Port      types.Int64       `tfsdk:"port"`
+	Status    types.String      `tfsdk:"status"`
+	Updated   timetypes.RFC3339 `tfsdk:"updated"`
+	Version   types.String      `tfsdk:"version"`
 
-	ForkSource      types.Int64       `tfsdk:"fork_source"`
-	ForkRestoreTime timetypes.RFC3339 `tfsdk:"fork_restore_time"`
+	// Fork-specific fields
+	OldestRestoreTime timetypes.RFC3339 `tfsdk:"oldest_restore_time"`
+	ForkSource        types.Int64       `tfsdk:"fork_source"`
+	ForkRestoreTime   timetypes.RFC3339 `tfsdk:"fork_restore_time"`
 
 	Hosts          types.Object `tfsdk:"hosts"`
 	Updates        types.Object `tfsdk:"updates"`
