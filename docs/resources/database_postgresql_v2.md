@@ -128,7 +128,6 @@ The following arguments are exposed by each entry in the `pending_updates` attri
 
 * `planned_for` - The date and time a maintenance update will be applied.
 
-
 ## updates
 
 The following arguments are supported in the `updates` specification block:
