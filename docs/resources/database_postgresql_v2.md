@@ -1,10 +1,10 @@
 ---
-page_title: "Linode: linode_database_postgresql"
+page_title: "Linode: linode_database_postgresql_v2"
 description: |-
   Manages a Linode PostgreSQL Database.
 ---
 
-# linode\_database\_postgresql
+# linode\_database\_postgresql\_v2
 
 Provides a Linode PostgreSQL Database resource. This can be used to create, modify, and delete Linode PostgreSQL Databases.
 For more information, see the [Linode APIv4 docs](https://techdocs.akamai.com/linode-api/reference/post-databases-postgre-sql-instances).
@@ -13,40 +13,48 @@ Please keep in mind that Managed Databases can take up to an hour to provision.
 
 ## Example Usage
 
-Creating a simple PostgreSQL database instance:
+Creating a simple PostgreSQL database:
 
 ```hcl
 resource "linode_database_postgresql" "foobar" {
   label = "mydatabase"
-  engine_id = "postgresql/13.2"
-  region = "us-southeast"
+  engine_id = "postgresql/16"
+  region = "us-mia"
   type = "g6-nanode-1"
 }
 ```
 
-Creating a complex PostgreSQL database instance:
+Creating a complex PostgreSQL database:
 
 ```hcl
 resource "linode_database_postgresql" "foobar" {
   label = "mydatabase"
-  engine_id = "postgresql/13.2"
-  region = "us-southeast"
+  engine_id = "postgresql/16"
+  region = "us-mia"
   type = "g6-nanode-1"
 
-  allow_list = ["0.0.0.0/0"]
+  allow_list = ["10.0.0.3/32"]
   cluster_size = 3
-  encrypted = true
-  replication_type = "semi_synch"
-  replication_commit_type = "remote_write"
-  ssl_connection = true
 
   updates {
-    day_of_week = "saturday"
-    duration = 1
-    frequency = "monthly"
+    duration = 4
+    frequency = "weekly"
     hour_of_day = 22
     week_of_month = 2
   }
+}
+```
+
+Creating a forked PostgreSQL database:
+
+```hcl
+resource "linode_database_postgresql" "foobar" {
+  label = "mydatabase"
+  engine_id = "postgresql/16"
+  region = "us-mia"
+  type = "g6-nanode-1"
+
+  fork_source = 12345
 }
 ```
 
