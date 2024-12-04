@@ -63,14 +63,18 @@ var (
 	}
 
 	testDBSSL = linodego.PostgresDatabaseSSL{CACertificate: []byte("Zm9vYmFy")}
+
+	testDBCreds = linodego.PostgresDatabaseCredential{
+		Username: "foobar",
+		Password: "barfoo",
+	}
 )
 
 func TestModel_Flatten(t *testing.T) {
 	var model databasepostgresqlv2.Model
 
-	model.Flatten(context.Background(), &testDB, &testDBSSL, false)
+	model.Flatten(context.Background(), &testDB, &testDBSSL, &testDBCreds, false)
 
-	hosts := helper.FrameworkObjectAs[databasepostgresqlv2.ModelHosts](t, model.Hosts)
 	updates := helper.FrameworkObjectAs[databasepostgresqlv2.ModelUpdates](t, model.Updates)
 
 	require.Equal(t, "12345", model.ID.ValueString())
@@ -87,16 +91,15 @@ func TestModel_Flatten(t *testing.T) {
 	require.Equal(t, int64(1234), model.Port.ValueInt64())
 	require.Equal(t, true, model.SSLConnection.ValueBool())
 	require.Equal(t, "Zm9vYmFy", model.CACert.ValueString())
-
+	require.Equal(t, int64(12345), model.ForkSource.ValueInt64())
+	require.Equal(t, currentTimeFWValue, model.ForkRestoreTime)
+	require.Equal(t, "1.2.3.4", model.HostPrimary.ValueString())
+	require.Equal(t, "4.3.2.1", model.HostSecondary.ValueString())
+	require.Equal(t, "foobar", model.RootUsername.ValueString())
+	require.Equal(t, "barfoo", model.RootPassword.ValueString())
 	require.Equal(t, currentTimeFWValue, model.Created)
 	require.Equal(t, currentTimeFWValue, model.Updated)
 	require.Equal(t, currentTimeFWValue, model.OldestRestoreTime)
-
-	require.Equal(t, int64(12345), model.ForkSource.ValueInt64())
-	require.Equal(t, currentTimeFWValue, model.ForkRestoreTime)
-
-	require.Equal(t, "1.2.3.4", hosts.Primary.ValueString())
-	require.Equal(t, "4.3.2.1", hosts.Secondary.ValueString())
 
 	require.Equal(t, int64(1), updates.DayOfWeek.ValueInt64())
 	require.Equal(t, int64(1), updates.Duration.ValueInt64())
@@ -126,7 +129,7 @@ func TestModel_Flatten(t *testing.T) {
 
 func TestModel_Copy(t *testing.T) {
 	var modelOld, modelNew databasepostgresqlv2.Model
-	modelOld.Flatten(context.Background(), &testDB, &testDBSSL, false)
+	modelOld.Flatten(context.Background(), &testDB, &testDBSSL, &testDBCreds, false)
 
 	modelNew.CopyFrom(&modelOld, false)
 

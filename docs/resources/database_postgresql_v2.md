@@ -96,13 +96,13 @@ In addition to all arguments above, the following attributes are exported:
 
 * `engine` - The Managed Database engine. (e.g. `postgresql`)
 
-* `ssl_connection` - (Optional) Whether to require SSL credentials to establish a connection to the Managed Database. (default `false`)
+* `ssl_connection` - Whether to require SSL credentials to establish a connection to the Managed Database.
 
-  * `encrypted` - (Optional) Whether the Managed Databases is encrypted. (default `false`)
+* `encrypted` - Whether the Managed Databases is encrypted.
 
 * `host_primary` - The primary host for the Managed Database.
 
-* `host_secondary` - The secondary/private network host for the Managed Database.
+* `host_secondary` - The secondary/private host for the managed database.
 
 * `root_password` - The randomly-generated root password for the Managed Database instance.
 

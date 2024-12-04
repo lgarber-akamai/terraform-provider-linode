@@ -166,9 +166,29 @@ var frameworkResourceSchema = schema.Schema{
 			PlanModifiers: []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
 		},
 		"port": schema.Int64Attribute{
-			Computed:      true,
 			Description:   "The access port for this Managed Database.",
+			Computed:      true,
 			PlanModifiers: []planmodifier.Int64{int64planmodifier.UseStateForUnknown()},
+		},
+		"host_primary": schema.StringAttribute{
+			Description: "The primary host for the Managed Database.",
+			Computed:    true,
+		},
+		"host_secondary": schema.StringAttribute{
+			Description: "The secondary/private host for the Managed Database.",
+			Computed:    true,
+		},
+		"root_username": schema.StringAttribute{
+			Description:   "The root username for the Managed Database instance.",
+			Computed:      true,
+			Sensitive:     true,
+			PlanModifiers: []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
+		},
+		"root_password": schema.StringAttribute{
+			Description:   "The randomly generated root password for the Managed Database instance.",
+			Computed:      true,
+			Sensitive:     true,
+			PlanModifiers: []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
 		},
 		"ssl_connection": schema.BoolAttribute{
 			Computed:    true,
@@ -196,13 +216,6 @@ var frameworkResourceSchema = schema.Schema{
 			AttributeTypes: updatesAttributes,
 			Computed:       true,
 			Optional:       true,
-			PlanModifiers:  []planmodifier.Object{objectplanmodifier.UseStateForUnknown()},
-		},
-
-		"hosts": schema.ObjectAttribute{
-			Description:    "The primary and secondary hosts for the Managed Database.",
-			AttributeTypes: hostsAttributes,
-			Computed:       true,
 			PlanModifiers:  []planmodifier.Object{objectplanmodifier.UseStateForUnknown()},
 		},
 		"pending_updates": schema.SetAttribute{
