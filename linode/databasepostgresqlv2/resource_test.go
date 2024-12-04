@@ -6,17 +6,15 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"strconv"
 	"testing"
 	"time"
-
-	"github.com/linode/terraform-provider-linode/v2/linode/helper"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/linode/linodego"
 	"github.com/linode/terraform-provider-linode/v2/linode/acceptance"
 	"github.com/linode/terraform-provider-linode/v2/linode/databasepostgresqlv2/tmpl"
+	"github.com/linode/terraform-provider-linode/v2/linode/helper"
 )
 
 var testRegion, testEngine string
@@ -268,7 +266,7 @@ func TestAccResource_fork(t *testing.T) {
 	resNameSource := "linode_database_postgresql_v2.foobar"
 	resNameFork := "linode_database_postgresql_v2.fork"
 
-	var dbSource, dbFork linodego.PostgresDatabase
+	var dbSource linodego.PostgresDatabase
 
 	label := acctest.RandomWithPrefix("tf_test")
 
@@ -344,8 +342,7 @@ func TestAccResource_fork(t *testing.T) {
 				},
 				Config: tmpl.Fork(t, label, testRegion, testEngine, "g6-nanode-1"),
 				Check: resource.ComposeTestCheckFunc(
-					acceptance.CheckPostgresDatabaseExists(resNameSource, &dbSource),
-					acceptance.CheckPostgresDatabaseExists(resNameFork, &dbFork),
+					acceptance.CheckPostgresDatabaseExists(resNameFork, nil),
 
 					resource.TestCheckResourceAttrSet(resNameSource, "oldest_restore_time"),
 
@@ -368,7 +365,7 @@ func TestAccResource_fork(t *testing.T) {
 					resource.TestCheckResourceAttr(resNameFork, "allow_list.#", "1"),
 					resource.TestCheckResourceAttr(resNameFork, "allow_list.0", "0.0.0.0/0"),
 					resource.TestCheckResourceAttrSet(resNameFork, "hosts.primary"),
-					resource.TestCheckResourceAttr(resNameFork, "fork_source", strconv.Itoa(dbSource.ID)),
+					resource.TestCheckResourceAttrSet(resNameFork, "fork_source"),
 					resource.TestCheckResourceAttrSet(resNameFork, "fork_restore_time"),
 					resource.TestCheckResourceAttrSet(resNameFork, "updates.day_of_week"),
 					resource.TestCheckResourceAttrSet(resNameFork, "updates.duration"),

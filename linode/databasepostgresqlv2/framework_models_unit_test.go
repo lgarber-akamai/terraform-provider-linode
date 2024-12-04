@@ -61,12 +61,14 @@ var (
 		OldestRestoreTime: &currentTime,
 		Platform:          "foobar",
 	}
+
+	testDBSSL = linodego.PostgresDatabaseSSL{CACertificate: []byte("Zm9vYmFy")}
 )
 
 func TestModel_Flatten(t *testing.T) {
 	var model databasepostgresqlv2.Model
 
-	model.Flatten(context.Background(), &testDB, false)
+	model.Flatten(context.Background(), &testDB, &testDBSSL, false)
 
 	hosts := helper.FrameworkObjectAs[databasepostgresqlv2.ModelHosts](t, model.Hosts)
 	updates := helper.FrameworkObjectAs[databasepostgresqlv2.ModelUpdates](t, model.Updates)
@@ -84,6 +86,11 @@ func TestModel_Flatten(t *testing.T) {
 	require.Equal(t, "foobar", model.Platform.ValueString())
 	require.Equal(t, int64(1234), model.Port.ValueInt64())
 	require.Equal(t, true, model.SSLConnection.ValueBool())
+	require.Equal(t, "Zm9vYmFy", model.CACert.ValueString())
+
+	require.Equal(t, currentTimeFWValue, model.Created)
+	require.Equal(t, currentTimeFWValue, model.Updated)
+	require.Equal(t, currentTimeFWValue, model.OldestRestoreTime)
 
 	require.Equal(t, int64(12345), model.ForkSource.ValueInt64())
 	require.Equal(t, currentTimeFWValue, model.ForkRestoreTime)
@@ -95,7 +102,6 @@ func TestModel_Flatten(t *testing.T) {
 	require.Equal(t, int64(1), updates.Duration.ValueInt64())
 	require.Equal(t, "weekly", updates.Frequency.ValueString())
 	require.Equal(t, int64(1), updates.HourOfDay.ValueInt64())
-	require.Equal(t, currentTimeFWValue, model.OldestRestoreTime)
 
 	allowListElements := model.AllowList.Elements()
 	require.Contains(t, allowListElements, types.StringValue("0.0.0.0/0"))
@@ -120,7 +126,7 @@ func TestModel_Flatten(t *testing.T) {
 
 func TestModel_Copy(t *testing.T) {
 	var modelOld, modelNew databasepostgresqlv2.Model
-	modelOld.Flatten(context.Background(), &testDB, false)
+	modelOld.Flatten(context.Background(), &testDB, &testDBSSL, false)
 
 	modelNew.CopyFrom(&modelOld, false)
 

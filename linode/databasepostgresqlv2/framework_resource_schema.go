@@ -5,7 +5,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
@@ -16,18 +15,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/linode/terraform-provider-linode/v2/linode/helper"
 )
 
 var (
-	allowListDefault, _ = types.SetValue(types.StringType, []attr.Value{types.StringValue("0.0.0.0/0")})
-
-	forkAttributes = map[string]attr.Type{
-		"source": types.Int64Type,
-	}
-
-	forkDetailsAttributes = map[string]attr.Type{
-		"restore_time": timetypes.RFC3339Type{},
-	}
+	allowListDefault = helper.FrameworkMust(
+		types.SetValue(types.StringType, []attr.Value{types.StringValue("0.0.0.0/0")}),
+	)
 
 	hostsAttributes = map[string]attr.Type{
 		"primary":   types.StringType,
@@ -98,6 +92,11 @@ var frameworkResourceSchema = schema.Schema{
 				setplanmodifier.UseStateForUnknown(),
 			},
 		},
+		"ca_cert": schema.StringAttribute{
+			Description: "The base64-encoded SSL CA certificate for the Managed Database.",
+			Computed:    true,
+			Sensitive:   true,
+		},
 		"cluster_size": schema.Int64Attribute{
 			Optional:    true,
 			Computed:    true,
@@ -110,14 +109,22 @@ var frameworkResourceSchema = schema.Schema{
 				int64planmodifier.UseStateForUnknown(),
 			},
 		},
-		"ssl_connection": schema.BoolAttribute{
-			Optional: true,
-			Computed: true,
-			Default:  booldefault.StaticBool(true),
-			Description: "Whether to require SSL credentials to establish a connection to the Managed Database. " +
-				"Currently required to be true.",
-			PlanModifiers: []planmodifier.Bool{
-				boolplanmodifier.UseStateForUnknown(),
+		"fork_source": schema.Int64Attribute{
+			Description: "The ID of the database that was forked from.",
+			Optional:    true,
+			PlanModifiers: []planmodifier.Int64{
+				int64planmodifier.UseStateForUnknown(),
+				int64planmodifier.RequiresReplace(),
+			},
+		},
+		"fork_restore_time": schema.StringAttribute{
+			Description: "The database timestamp from which it was restored.",
+			Optional:    true,
+			Computed:    true,
+			CustomType:  timetypes.RFC3339Type{},
+			PlanModifiers: []planmodifier.String{
+				stringplanmodifier.UseStateForUnknown(),
+				stringplanmodifier.RequiresReplace(),
 			},
 		},
 
@@ -163,6 +170,13 @@ var frameworkResourceSchema = schema.Schema{
 			Description:   "The access port for this Managed Database.",
 			PlanModifiers: []planmodifier.Int64{int64planmodifier.UseStateForUnknown()},
 		},
+		"ssl_connection": schema.BoolAttribute{
+			Computed:    true,
+			Description: "Whether to require SSL credentials to establish a connection to the Managed Database.",
+			PlanModifiers: []planmodifier.Bool{
+				boolplanmodifier.UseStateForUnknown(),
+			},
+		},
 		"status": schema.StringAttribute{
 			Computed:    true,
 			Description: "The operating status of the Managed Database.",
@@ -177,24 +191,8 @@ var frameworkResourceSchema = schema.Schema{
 			Computed:    true,
 		},
 
-		"fork_source": schema.Int64Attribute{
-			Optional: true,
-			PlanModifiers: []planmodifier.Int64{
-				int64planmodifier.UseStateForUnknown(),
-				int64planmodifier.RequiresReplace(),
-			},
-		},
-		"fork_restore_time": schema.StringAttribute{
-			Optional:   true,
-			Computed:   true,
-			CustomType: timetypes.RFC3339Type{},
-			PlanModifiers: []planmodifier.String{
-				stringplanmodifier.UseStateForUnknown(),
-				stringplanmodifier.RequiresReplace(),
-			},
-		},
-
 		"updates": schema.ObjectAttribute{
+			Description:    "Configuration settings for automated patch update maintenance for the Managed Database.",
 			AttributeTypes: updatesAttributes,
 			Computed:       true,
 			Optional:       true,
@@ -202,6 +200,7 @@ var frameworkResourceSchema = schema.Schema{
 		},
 
 		"hosts": schema.ObjectAttribute{
+			Description:    "The primary and secondary hosts for the Managed Database.",
 			AttributeTypes: hostsAttributes,
 			Computed:       true,
 			PlanModifiers:  []planmodifier.Object{objectplanmodifier.UseStateForUnknown()},

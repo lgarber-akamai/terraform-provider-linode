@@ -162,13 +162,10 @@ func (r *Resource) Create(
 
 	tflog.Debug(ctx, "client.GetPostgresDatabase(...)", nil)
 
-	db, err = client.GetPostgresDatabase(ctx, db.ID)
-	if err != nil {
-		resp.Diagnostics.AddError("Failed to refresh PostgreSQL database", err.Error())
+	resp.Diagnostics.Append(data.Refresh(ctx, client, db.ID, true)...)
+	if resp.Diagnostics.HasError() {
 		return
 	}
-
-	data.Flatten(ctx, db, true)
 
 	// IDs should always be overridden during creation (see #1085)
 	// TODO: Remove when Crossplane empty string ID issue is resolved
@@ -223,7 +220,13 @@ func (r *Resource) Read(
 		return
 	}
 
-	data.Flatten(ctx, db, false)
+	dbSSL, err := client.GetPostgresDatabaseSSL(ctx, db.ID)
+	if err != nil {
+		resp.Diagnostics.AddError("Failed to refresh PostgreSQL database SSL", err.Error())
+		return
+	}
+
+	data.Flatten(ctx, db, dbSSL, false)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
@@ -335,25 +338,22 @@ func (r *Resource) Update(
 		tflog.Debug(ctx, "client.UpdatePostgresDatabase(...)", map[string]any{
 			"options": updateOpts,
 		})
-		db, err := client.UpdatePostgresDatabase(ctx, id, updateOpts)
-		if err != nil {
+		if _, err := client.UpdatePostgresDatabase(ctx, id, updateOpts); err != nil {
 			resp.Diagnostics.AddError(
 				fmt.Sprintf("Failed to update database (%d)", id),
 				err.Error(),
 			)
 			return
 		}
-		plan.Flatten(ctx, db, false)
 
 		// TODO: Poll for update event to complete
-		err = client.WaitForDatabaseStatus(
+		if err := client.WaitForDatabaseStatus(
 			ctx,
 			id,
 			linodego.DatabaseEngineTypePostgres,
 			linodego.DatabaseStatusActive,
 			60*60,
-		)
-		if err != nil {
+		); err != nil {
 			resp.Diagnostics.AddError(
 				fmt.Sprintf("Failed to wait for database(%d) active", id),
 				err.Error(),
@@ -361,16 +361,10 @@ func (r *Resource) Update(
 			return
 		}
 
-		db, err = client.GetPostgresDatabase(ctx, id)
-		if err != nil {
-			resp.Diagnostics.AddError(
-				fmt.Sprintf("Failed to refresh database (%d)", id),
-				err.Error(),
-			)
+		resp.Diagnostics.Append(plan.Refresh(ctx, client, id, false)...)
+		if resp.Diagnostics.HasError() {
 			return
 		}
-
-		plan.Flatten(ctx, db, false)
 	}
 
 	plan.CopyFrom(&state, true)

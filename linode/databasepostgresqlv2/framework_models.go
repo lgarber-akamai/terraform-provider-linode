@@ -57,6 +57,7 @@ type Model struct {
 	ClusterSize   types.Int64 `tfsdk:"cluster_size"`
 	SSLConnection types.Bool  `tfsdk:"ssl_connection"`
 
+	CACert    types.String      `tfsdk:"ca_cert"`
 	Created   timetypes.RFC3339 `tfsdk:"created"`
 	Encrypted types.Bool        `tfsdk:"encrypted"`
 	Engine    types.String      `tfsdk:"engine"`
@@ -77,7 +78,34 @@ type Model struct {
 	PendingUpdates types.Set    `tfsdk:"pending_updates"`
 }
 
-func (m *Model) Flatten(ctx context.Context, db *linodego.PostgresDatabase, preserveKnown bool) (d diag.Diagnostics) {
+func (m *Model) Refresh(
+	ctx context.Context,
+	client *linodego.Client,
+	dbID int,
+	preserveKnown bool,
+) (d diag.Diagnostics) {
+	db, err := client.GetPostgresDatabase(ctx, dbID)
+	if err != nil {
+		d.AddError("Failed to refresh PostgreSQL database", err.Error())
+		return
+	}
+
+	dbSSL, err := client.GetPostgresDatabaseSSL(ctx, dbID)
+	if err != nil {
+		d.AddError("Failed to refresh PostgreSQL database SSL", err.Error())
+		return
+	}
+
+	m.Flatten(ctx, db, dbSSL, preserveKnown)
+	return
+}
+
+func (m *Model) Flatten(
+	ctx context.Context,
+	db *linodego.PostgresDatabase,
+	ssl *linodego.PostgresDatabaseSSL,
+	preserveKnown bool,
+) (d diag.Diagnostics) {
 	m.ID = helper.KeepOrUpdateString(m.ID, strconv.Itoa(db.ID), preserveKnown)
 
 	m.Label = helper.KeepOrUpdateString(m.Label, db.Label, preserveKnown)
@@ -93,6 +121,8 @@ func (m *Model) Flatten(ctx context.Context, db *linodego.PostgresDatabase, pres
 	m.Created = helper.KeepOrUpdateValue(m.Created, timetypes.NewRFC3339TimePointerValue(db.Created), preserveKnown)
 	m.Encrypted = helper.KeepOrUpdateBool(m.Encrypted, db.Encrypted, preserveKnown)
 	m.Engine = helper.KeepOrUpdateString(m.Engine, db.Engine, preserveKnown)
+
+	m.CACert = helper.KeepOrUpdateString(m.CACert, string(ssl.CACertificate), preserveKnown)
 
 	m.AllowList = helper.KeepOrUpdateSet(
 		types.StringType,
@@ -218,6 +248,7 @@ func (m *Model) CopyFrom(other *Model, preserveKnown bool) {
 	m.ClusterSize = helper.KeepOrUpdateValue(m.ClusterSize, other.ClusterSize, preserveKnown)
 	m.SSLConnection = helper.KeepOrUpdateValue(m.SSLConnection, other.SSLConnection, preserveKnown)
 	m.Created = helper.KeepOrUpdateValue(m.Created, other.Created, preserveKnown)
+	m.CACert = helper.KeepOrUpdateValue(m.CACert, other.CACert, preserveKnown)
 	m.Encrypted = helper.KeepOrUpdateValue(m.Encrypted, other.Encrypted, preserveKnown)
 	m.Members = helper.KeepOrUpdateValue(m.Members, other.Members, preserveKnown)
 	m.OldestRestoreTime = helper.KeepOrUpdateValue(m.OldestRestoreTime, other.OldestRestoreTime, preserveKnown)
