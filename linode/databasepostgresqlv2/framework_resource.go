@@ -6,6 +6,8 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/hashicorp/terraform-plugin-framework/path"
+
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -100,6 +102,10 @@ func (r *Resource) Create(
 		)
 		return
 	}
+
+	// We explicitly set the ID in state here to prevent leaking the resource
+	// in the case of a polling failure
+	resp.State.SetAttribute(ctx, path.Root("id"), strconv.Itoa(db.ID))
 
 	ctx = tflog.SetField(ctx, "id", db.ID)
 
