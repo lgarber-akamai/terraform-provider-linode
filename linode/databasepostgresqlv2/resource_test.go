@@ -92,7 +92,7 @@ func TestAccResource_basic(t *testing.T) {
 
 					resource.TestCheckResourceAttrSet(resName, "id"),
 
-					resource.TestCheckNoResourceAttr(resName, "ca_cert"),
+					resource.TestCheckResourceAttrSet(resName, "ca_cert"),
 					resource.TestCheckResourceAttr(resName, "cluster_size", "1"),
 					resource.TestCheckResourceAttrSet(resName, "created"),
 					resource.TestCheckResourceAttr(resName, "encrypted", "true"),
@@ -103,8 +103,8 @@ func TestAccResource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resName, "host_primary"),
 					resource.TestCheckResourceAttr(resName, "label", label),
 					resource.TestCheckResourceAttrSet(resName, "members.%"),
-					resource.TestCheckNoResourceAttr(resName, "root_password"),
-					resource.TestCheckNoResourceAttr(resName, "root_username"),
+					resource.TestCheckResourceAttrSet(resName, "root_password"),
+					resource.TestCheckResourceAttrSet(resName, "root_username"),
 					resource.TestCheckResourceAttr(resName, "platform", "rdbms-default"),
 					resource.TestCheckResourceAttrSet(resName, "port"),
 					resource.TestCheckResourceAttr(resName, "region", testRegion),
@@ -168,6 +168,7 @@ func TestAccResource_complex(t *testing.T) {
 
 					resource.TestCheckResourceAttrSet(resName, "id"),
 
+					resource.TestCheckResourceAttrSet(resName, "ca_cert"),
 					resource.TestCheckResourceAttr(resName, "cluster_size", "1"),
 					resource.TestCheckResourceAttrSet(resName, "created"),
 					resource.TestCheckResourceAttr(resName, "encrypted", "true"),
@@ -178,8 +179,8 @@ func TestAccResource_complex(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resName, "host_primary"),
 					resource.TestCheckResourceAttr(resName, "label", label),
 					resource.TestCheckResourceAttrSet(resName, "members.%"),
-					resource.TestCheckNoResourceAttr(resName, "root_password"),
-					resource.TestCheckNoResourceAttr(resName, "root_username"),
+					resource.TestCheckResourceAttrSet(resName, "root_password"),
+					resource.TestCheckResourceAttrSet(resName, "root_username"),
 					resource.TestCheckResourceAttr(resName, "platform", "rdbms-default"),
 					resource.TestCheckResourceAttrSet(resName, "port"),
 					resource.TestCheckResourceAttr(resName, "region", testRegion),
@@ -287,7 +288,7 @@ func TestAccResource_fork(t *testing.T) {
 
 					resource.TestCheckResourceAttrSet(resNameSource, "id"),
 
-					resource.TestCheckNoResourceAttr(resNameSource, "ca_cert"),
+					resource.TestCheckResourceAttrSet(resNameSource, "ca_cert"),
 					resource.TestCheckResourceAttr(resNameSource, "cluster_size", "1"),
 					resource.TestCheckResourceAttrSet(resNameSource, "created"),
 					resource.TestCheckResourceAttr(resNameSource, "encrypted", "true"),
@@ -298,8 +299,8 @@ func TestAccResource_fork(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resNameSource, "host_primary"),
 					resource.TestCheckResourceAttr(resNameSource, "label", label),
 					resource.TestCheckResourceAttrSet(resNameSource, "members.%"),
-					resource.TestCheckNoResourceAttr(resNameSource, "root_password"),
-					resource.TestCheckNoResourceAttr(resNameSource, "root_username"),
+					resource.TestCheckResourceAttrSet(resNameSource, "root_password"),
+					resource.TestCheckResourceAttrSet(resNameSource, "root_username"),
 					resource.TestCheckResourceAttr(resNameSource, "platform", "rdbms-default"),
 					resource.TestCheckResourceAttrSet(resNameSource, "port"),
 					resource.TestCheckResourceAttr(resNameSource, "region", testRegion),
