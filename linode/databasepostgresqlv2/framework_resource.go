@@ -160,8 +160,6 @@ func (r *Resource) Create(
 		return
 	}
 
-	tflog.Debug(ctx, "client.GetPostgresDatabase(...)", nil)
-
 	resp.Diagnostics.Append(data.Refresh(ctx, client, db.ID, true)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -200,8 +198,6 @@ func (r *Resource) Read(
 		return
 	}
 
-	// We can't use Model{}.Refresh(...) here because we need to remove the DB from
-	// state on 404s.
 	tflog.Debug(ctx, "client.GetPostgresDatabase(...)")
 
 	db, err := client.GetPostgresDatabase(ctx, id)
@@ -224,23 +220,11 @@ func (r *Resource) Read(
 		return
 	}
 
-	tflog.Debug(ctx, "client.GetPostgresDatabaseSSL(...)")
-
-	dbSSL, err := client.GetPostgresDatabaseSSL(ctx, db.ID)
-	if err != nil {
-		resp.Diagnostics.AddError("Failed to refresh PostgreSQL database SSL", err.Error())
+	resp.Diagnostics.Append(data.Refresh(ctx, client, db.ID, false)...)
+	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	tflog.Debug(ctx, "client.GetPostgresDatabaseCredentials(...)")
-
-	dbCreds, err := client.GetPostgresDatabaseCredentials(ctx, db.ID)
-	if err != nil {
-		resp.Diagnostics.AddError("Failed to refresh PostgreSQL database credentials", err.Error())
-		return
-	}
-
-	data.Flatten(ctx, db, dbSSL, dbCreds, false)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
