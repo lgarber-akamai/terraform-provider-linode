@@ -200,6 +200,8 @@ func (r *Resource) Read(
 		return
 	}
 
+	// We can't use Model{}.Refresh(...) here because we need to remove the DB from
+	// state on 404s.
 	db, err := client.GetPostgresDatabase(ctx, id)
 	if err != nil {
 		if lerr, ok := err.(*linodego.Error); ok && lerr.Code == 404 {

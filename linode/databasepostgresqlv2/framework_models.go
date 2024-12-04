@@ -4,6 +4,8 @@ import (
 	"context"
 	"strconv"
 
+	"github.com/hashicorp/terraform-plugin-log/tflog"
+
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
@@ -84,12 +86,18 @@ func (m *Model) Refresh(
 	dbID int,
 	preserveKnown bool,
 ) (d diag.Diagnostics) {
+	tflog.SetField(ctx, "id", dbID)
+
+	tflog.Debug(ctx, "Refreshing the PostgreSQL database...")
+
+	tflog.Debug(ctx, "client.GetPostgresDatabase(...)")
 	db, err := client.GetPostgresDatabase(ctx, dbID)
 	if err != nil {
 		d.AddError("Failed to refresh PostgreSQL database", err.Error())
 		return
 	}
 
+	tflog.Debug(ctx, "client.GetPostgresDatabaseSSL(...)")
 	dbSSL, err := client.GetPostgresDatabaseSSL(ctx, dbID)
 	if err != nil {
 		d.AddError("Failed to refresh PostgreSQL database SSL", err.Error())
