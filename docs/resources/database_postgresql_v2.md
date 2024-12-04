@@ -68,7 +68,58 @@ The following arguments are supported:
 
 * `cluster_size` - (Optional) The number of Linode Instance nodes deployed to the Managed Database. (default `1`)
 
+* `fork_restore_time` - (Optional) The database timestamp from which it was restored.
+
+* `fork_source` - (Optional) The ID of the database that was forked from.
+
 * [`updates`](#updates) - (Optional) Configuration settings for automated patch update maintenance for the Managed Database.
+
+## Attributes Reference
+
+In addition to all arguments above, the following attributes are exported:
+
+* `id` - The ID of the Managed Database.
+
+* `ca_cert` - The base64-encoded SSL CA certificate for the Managed Database.
+
+* `created` - When this Managed Database was created.
+
+* `encrypted` - Whether the Managed Databases is encrypted.
+
+* `engine` - The Managed Database engine. (e.g. `postgresql`)
+
+* `host_primary` - The primary host for the Managed Database.
+
+* `host_secondary` - The secondary/private host for the managed database.
+
+* `pending_updates` - A set of pending updates.
+
+* `platform` - The back-end platform for relational databases used by the service.
+
+* `port` - The access port for this Managed Database.
+
+* `root_password` - The randomly-generated root password for the Managed Database instance.
+
+* `root_username` - The root username for the Managed Database instance.
+
+* `ssl_connection` - Whether to require SSL credentials to establish a connection to the Managed Database.
+
+* `status` - The operating status of the Managed Database.
+
+* `updated` - When this Managed Database was last updated.
+
+* `version` - The Managed Database engine version. (e.g. `13.2`)
+
+## pending_updates
+
+The following arguments are exposed by each entry in the `pending_updates` attribute:
+
+* `deadline` - The time when a mandatory update needs to be applied.
+
+* `description` - A description of the update.
+
+* `planned_for` - The date and time a maintenance update will be applied.
+
 
 ## updates
 
@@ -84,40 +135,10 @@ The following arguments are supported in the `updates` specification block:
 
 * `week_of_month` - (Optional) The week of the month to perform monthly frequency updates. Required for `monthly` frequency updates. (`1`..`4`)
 
-## Attributes Reference
-
-In addition to all arguments above, the following attributes are exported:
-
-* `id` - The ID of the Managed Database.
-
-* `ca_cert` - The base64-encoded SSL CA certificate for the Managed Database.
-
-* `created` - When this Managed Database was created.
-
-* `engine` - The Managed Database engine. (e.g. `postgresql`)
-
-* `ssl_connection` - Whether to require SSL credentials to establish a connection to the Managed Database.
-
-* `encrypted` - Whether the Managed Databases is encrypted.
-
-* `host_primary` - The primary host for the Managed Database.
-
-* `host_secondary` - The secondary/private host for the managed database.
-
-* `root_password` - The randomly-generated root password for the Managed Database instance.
-
-* `root_username` - The root username for the Managed Database instance.
-
-* `status` - The operating status of the Managed Database.
-
-* `updated` - When this Managed Database was last updated.
-
-* `version` - The Managed Database engine version. (e.g. `13.2`)
-
 ## Import
 
 Linode PostgreSQL Databases can be imported using the `id`, e.g.
 
 ```sh
-terraform import linode_database_postgresql.foobar 1234567
+terraform import linode_database_postgresql_v2.foobar 1234567
 ```

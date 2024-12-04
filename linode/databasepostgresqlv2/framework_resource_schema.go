@@ -23,11 +23,6 @@ var (
 		types.SetValue(types.StringType, []attr.Value{types.StringValue("0.0.0.0/0")}),
 	)
 
-	hostsAttributes = map[string]attr.Type{
-		"primary":   types.StringType,
-		"secondary": types.StringType,
-	}
-
 	updatesAttributes = map[string]attr.Type{
 		"day_of_week": types.Int64Type,
 		"duration":    types.Int64Type,
@@ -52,16 +47,16 @@ var frameworkResourceSchema = schema.Schema{
 			},
 		},
 
-		"label": schema.StringAttribute{
+		"engine_id": schema.StringAttribute{
 			Required:    true,
-			Description: "A unique, user-defined string referring to the Managed Database.",
+			Description: "The unique ID of the database engine and version to use. (e.g. postgresql/16)",
 			PlanModifiers: []planmodifier.String{
 				stringplanmodifier.UseStateForUnknown(),
 			},
 		},
-		"engine_id": schema.StringAttribute{
+		"label": schema.StringAttribute{
 			Required:    true,
-			Description: "The unique ID of the database engine and version to use. (e.g. postgresql/16)",
+			Description: "A unique, user-defined string referring to the Managed Database.",
 			PlanModifiers: []planmodifier.String{
 				stringplanmodifier.UseStateForUnknown(),
 			},
@@ -109,14 +104,6 @@ var frameworkResourceSchema = schema.Schema{
 				int64planmodifier.UseStateForUnknown(),
 			},
 		},
-		"fork_source": schema.Int64Attribute{
-			Description: "The ID of the database that was forked from.",
-			Optional:    true,
-			PlanModifiers: []planmodifier.Int64{
-				int64planmodifier.UseStateForUnknown(),
-				int64planmodifier.RequiresReplace(),
-			},
-		},
 		"fork_restore_time": schema.StringAttribute{
 			Description: "The database timestamp from which it was restored.",
 			Optional:    true,
@@ -126,6 +113,21 @@ var frameworkResourceSchema = schema.Schema{
 				stringplanmodifier.UseStateForUnknown(),
 				stringplanmodifier.RequiresReplace(),
 			},
+		},
+		"fork_source": schema.Int64Attribute{
+			Description: "The ID of the database that was forked from.",
+			Optional:    true,
+			PlanModifiers: []planmodifier.Int64{
+				int64planmodifier.UseStateForUnknown(),
+				int64planmodifier.RequiresReplace(),
+			},
+		},
+		"updates": schema.ObjectAttribute{
+			Description:    "Configuration settings for automated patch update maintenance for the Managed Database.",
+			AttributeTypes: updatesAttributes,
+			Computed:       true,
+			Optional:       true,
+			PlanModifiers:  []planmodifier.Object{objectplanmodifier.UseStateForUnknown()},
 		},
 
 		"created": schema.StringAttribute{
@@ -150,6 +152,14 @@ var frameworkResourceSchema = schema.Schema{
 				stringplanmodifier.UseStateForUnknown(),
 			},
 		},
+		"host_primary": schema.StringAttribute{
+			Description: "The primary host for the Managed Database.",
+			Computed:    true,
+		},
+		"host_secondary": schema.StringAttribute{
+			Description: "The secondary/private host for the Managed Database.",
+			Computed:    true,
+		},
 		"members": schema.MapAttribute{
 			ElementType: types.StringType,
 			Computed:    true,
@@ -159,6 +169,12 @@ var frameworkResourceSchema = schema.Schema{
 			Description: "The oldest time to which a database can be restored.",
 			Computed:    true,
 			CustomType:  timetypes.RFC3339Type{},
+		},
+		"pending_updates": schema.SetAttribute{
+			Description:   "A set of pending updates.",
+			Computed:      true,
+			ElementType:   types.ObjectType{AttrTypes: pendingUpdateAttributes},
+			PlanModifiers: []planmodifier.Set{setplanmodifier.UseStateForUnknown()},
 		},
 		"platform": schema.StringAttribute{
 			Computed:      true,
@@ -170,22 +186,14 @@ var frameworkResourceSchema = schema.Schema{
 			Computed:      true,
 			PlanModifiers: []planmodifier.Int64{int64planmodifier.UseStateForUnknown()},
 		},
-		"host_primary": schema.StringAttribute{
-			Description: "The primary host for the Managed Database.",
-			Computed:    true,
-		},
-		"host_secondary": schema.StringAttribute{
-			Description: "The secondary/private host for the Managed Database.",
-			Computed:    true,
-		},
-		"root_username": schema.StringAttribute{
-			Description:   "The root username for the Managed Database instance.",
+		"root_password": schema.StringAttribute{
+			Description:   "The randomly generated root password for the Managed Database instance.",
 			Computed:      true,
 			Sensitive:     true,
 			PlanModifiers: []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
 		},
-		"root_password": schema.StringAttribute{
-			Description:   "The randomly generated root password for the Managed Database instance.",
+		"root_username": schema.StringAttribute{
+			Description:   "The root username for the Managed Database instance.",
 			Computed:      true,
 			Sensitive:     true,
 			PlanModifiers: []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
@@ -209,20 +217,6 @@ var frameworkResourceSchema = schema.Schema{
 		"version": schema.StringAttribute{
 			Description: "The Managed Database engine version.",
 			Computed:    true,
-		},
-
-		"updates": schema.ObjectAttribute{
-			Description:    "Configuration settings for automated patch update maintenance for the Managed Database.",
-			AttributeTypes: updatesAttributes,
-			Computed:       true,
-			Optional:       true,
-			PlanModifiers:  []planmodifier.Object{objectplanmodifier.UseStateForUnknown()},
-		},
-		"pending_updates": schema.SetAttribute{
-			Description:   "An array of pending updates.",
-			Computed:      true,
-			ElementType:   types.ObjectType{AttrTypes: pendingUpdateAttributes},
-			PlanModifiers: []planmodifier.Set{setplanmodifier.UseStateForUnknown()},
 		},
 	},
 }
