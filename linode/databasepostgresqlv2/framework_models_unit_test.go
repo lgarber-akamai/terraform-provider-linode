@@ -7,13 +7,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/linode/terraform-provider-linode/v2/linode/helper"
-
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-
 	"github.com/linode/linodego"
+	"github.com/linode/terraform-provider-linode/v2/linode/acceptance"
 	"github.com/linode/terraform-provider-linode/v2/linode/databasepostgresqlv2"
 	"github.com/stretchr/testify/require"
 )
@@ -75,7 +73,7 @@ func TestModel_Flatten(t *testing.T) {
 
 	model.Flatten(context.Background(), &testDB, &testDBSSL, &testDBCreds, false)
 
-	updates := helper.FrameworkObjectAs[databasepostgresqlv2.ModelUpdates](t, model.Updates)
+	updates := acceptance.FrameworkObjectAs[databasepostgresqlv2.ModelUpdates](t, model.Updates)
 
 	require.Equal(t, "12345", model.ID.ValueString())
 

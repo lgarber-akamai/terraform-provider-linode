@@ -2,6 +2,7 @@ package helper
 
 import (
 	"context"
+	"log"
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -36,7 +37,7 @@ func FrameworkAttemptRemoveResourceForEmptyID(
 // e.g. helper.Must(foo())
 func FrameworkMust[T any](result T, d diag.Diagnostics) T {
 	if d.HasError() {
-		panic(d.Errors())
+		log.Fatal(d.Errors())
 	}
 
 	return result
