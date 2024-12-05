@@ -18,6 +18,8 @@ jobs:
 
       - run: go version
 
+      - run: find e2e_scripts
+
       - name: Install deps
         run: make deps
 
