@@ -9,14 +9,14 @@ description: |-
 Provides a Linode PostgreSQL Database resource. This can be used to create, modify, and delete Linode PostgreSQL Databases.
 For more information, see the [Linode APIv4 docs](https://techdocs.akamai.com/linode-api/reference/post-databases-postgre-sql-instances).
 
-Please keep in mind that Managed Databases can take up to an hour to provision.
+Please keep in mind that Managed Databases can take up to half an hour to provision.
 
 ## Example Usage
 
 Creating a simple PostgreSQL database:
 
 ```hcl
-resource "linode_database_postgresql" "foobar" {
+resource "linode_database_postgresql_v2" "foobar" {
   label = "mydatabase"
   engine_id = "postgresql/16"
   region = "us-mia"
@@ -27,7 +27,7 @@ resource "linode_database_postgresql" "foobar" {
 Creating a complex PostgreSQL database:
 
 ```hcl
-resource "linode_database_postgresql" "foobar" {
+resource "linode_database_postgresql_v2" "foobar" {
   label = "mydatabase"
   engine_id = "postgresql/16"
   region = "us-mia"
@@ -48,7 +48,7 @@ resource "linode_database_postgresql" "foobar" {
 Creating a forked PostgreSQL database:
 
 ```hcl
-resource "linode_database_postgresql" "foobar" {
+resource "linode_database_postgresql_v2" "foobar" {
   label = "mydatabase"
   engine_id = "postgresql/16"
   region = "us-mia"
