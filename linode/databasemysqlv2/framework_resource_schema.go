@@ -1,6 +1,8 @@
 package databasemysqlv2
 
 import (
+	"context"
+
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
@@ -14,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/linode/terraform-provider-linode/v2/linode/helper"
 )
 
 var (
@@ -104,7 +107,19 @@ var frameworkResourceSchema = schema.Schema{
 			CustomType:  timetypes.RFC3339Type{},
 			PlanModifiers: []planmodifier.String{
 				stringplanmodifier.UseStateForUnknown(),
-				stringplanmodifier.RequiresReplace(),
+				stringplanmodifier.RequiresReplaceIf(
+					func(
+						ctx context.Context,
+						sr planmodifier.StringRequest,
+						rrifr *stringplanmodifier.RequiresReplaceIfFuncResponse,
+					) {
+						rrifr.RequiresReplace = !helper.CompareRFC3339TimeStrings(
+							sr.PlanValue.ValueString(),
+							sr.StateValue.ValueString(),
+						)
+					},
+					"TODO", "TODO",
+				),
 			},
 		},
 		"fork_source": schema.Int64Attribute{
