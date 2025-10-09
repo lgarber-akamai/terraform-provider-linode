@@ -93,6 +93,38 @@ resource "linode_interface" "vpc" {
 }
 ```
 
+<<<<<<< Updated upstream
+=======
+### VPC (IPv6) Interface Example
+
+The following example shows how to create a public VPC interface with a custom IPv6 configuration.
+
+```hcl
+resource "linode_interface" "vpc" {
+  linode_id   = linode_instance.my-instance.id
+
+  vpc = {
+    subnet_id = 12345
+    is_public = true
+    
+    ipv6 = {
+      slaac = [
+        {
+          range = "auto"
+        }
+      ]
+      
+      ranges = [
+        {
+          range = "auto"
+        }
+      ]
+    }
+  }
+}
+```
+
+>>>>>>> Stashed changes
 ### VLAN Interface Example
 
 The following example shows how to create a VLAN interface.
@@ -108,6 +140,7 @@ resource "linode_interface" "vlan" {
 }
 ```
 
+<<<<<<< Updated upstream
 ### Complete Example with Linode
 
 ```hcl
@@ -166,12 +199,15 @@ resource "linode_interface" "public" {
 }
 ```
 
+=======
+>>>>>>> Stashed changes
 ## Argument Reference
 
 The following arguments are supported:
 
 * `linode_id` - (Required) The ID of the Linode to assign this interface to.
 
+<<<<<<< Updated upstream
 * `firewall_id` - (Optional) The ID of an enabled firewall to secure a VPC or public interface. Not allowed for VLAN interfaces.
 
 * `default_route` - (Optional) Indicates whether the interface serves as the default route when multiple interfaces are eligible for this role.
@@ -183,6 +219,19 @@ The following arguments are supported:
 * `public` - (Optional) Configuration for a Linode public interface. Exactly one of `public`, `vlan`, or `vpc` must be specified.
 
   * `ipv4` - (Optional) IPv4 configuration for this interface.
+=======
+* `firewall_id` - (Optional) ID of an enabled firewall to secure a VPC or public interface. Not allowed for VLAN interfaces.
+
+* `default_route` - (Optional) Indicates if the interface serves as the default route when multiple interfaces are eligible for this role.
+
+  * `ipv4` - (Optional) If set to true, the interface is used for the IPv4 default route.
+
+  * `ipv6` - (Optional) If set to true, the interface is used for the IPv6 default route.
+
+* `public` - (Optional) Nested attributes object for a Linode public interface. Exactly one of `public`, `vlan`, or `vpc` must be specified.
+
+  * `ipv4` - (Optional) IPv4 addresses for this interface.
+>>>>>>> Stashed changes
 
     * `addresses` - (Optional) IPv4 addresses configured for this Linode interface. Each object in this list supports:
 
@@ -190,9 +239,15 @@ The following arguments are supported:
 
       * `primary` - (Optional) Whether this address is the primary address for the interface.
 
+<<<<<<< Updated upstream
   * `ipv6` - (Optional) IPv6 configuration for this interface.
 
     * `ranges` - (Optional) IPv6 ranges in CIDR notation (2600:0db8::1/64) or prefix-only (/64). Each object in this list supports:
+=======
+  * `ipv6` - (Optional) IPv6 addresses for this interface.
+
+    * `ranges` - (Optional) Configured IPv6 range in CIDR notation (2600:0db8::1/64) or prefix-only (/64). Each object in this list supports:
+>>>>>>> Stashed changes
 
       * `range` - (Required) The IPv6 range.
 
@@ -200,7 +255,11 @@ The following arguments are supported:
 
 * `vlan` - (Optional) Nested attributes object for a Linode VLAN interface. Exactly one of `public`, `vlan`, or `vpc` must be specified.
 
+<<<<<<< Updated upstream
   * `ipam_address` - (Optional) The VLAN interface's private IPv4 address in CIDR notation.
+=======
+  * `ipam_address` - (Optional) This VLAN interface's private IPv4 address in classless inter-domain routing (CIDR) notation.
+>>>>>>> Stashed changes
 
   * `vlan_label` - (Required) The VLAN's unique label. Must be between 1 and 64 characters.
 
@@ -218,10 +277,29 @@ The following arguments are supported:
 
       * `nat_1_1_address` - (Optional) The 1:1 NAT IPv4 address used to associate a public IPv4 address with the interface's VPC subnet IPv4 address.
 
+<<<<<<< Updated upstream
     * `ranges` - (Optional) IPv4 ranges in CIDR notation (1.2.3.4/24) or prefix-only format (/24). Each object in this list supports:
 
       * `range` - (Required) The IPv4 range.
 
+=======
+    * `ranges` - (Optional) CIDR notation of a range (1.2.3.4/24) or prefix only (/24). Each object in this list supports:
+
+      * `range` - (Required) The IPv4 range.
+
+  * `ipv6` - (Optional) IPv6 assigned through `slaac` and `ranges`. If you create a VPC interface in a subnet with IPv6 and don’t specify `slaac` or `ranges`, a SLAAC range is added automatically. **NOTE: IPv6 VPCs may not currently be available to all users.**
+
+    * `is_public` - (Optional) Indicates whether the IPv6 configuration profile interface is public. (Default `false`)
+
+    * `slaac` - (Optional) Defines IPv6 SLAAC address ranges. An address is automatically generated from the assigned /64 prefix using the Linode’s MAC address, just like on public IPv6 interfaces. Router advertisements (RA) are sent to the Linode, so standard SLAAC configuration works without any changes.
+
+      * `range` - (Optional) The IPv6 network range in CIDR notation.
+
+    * `ranges` - (Optional) Defines additional IPv6 network ranges.
+
+      * `range` - (Optional) The IPv6 network range in CIDR notation.
+
+>>>>>>> Stashed changes
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
@@ -232,13 +310,21 @@ In addition to all arguments above, the following attributes are exported:
 
   * `ipv4` - IPv4 configuration for the public interface:
 
+<<<<<<< Updated upstream
     * `assigned_addresses` - (Computed) The IPv4 addresses exclusively assigned to this Linode interface. Each object in this set supports:
+=======
+    * `assigned_addresses` - (Computed) The IPv4 address exclusively assigned to this Linode interface. Each object in this set supports:
+>>>>>>> Stashed changes
 
       * `address` - The assigned IPv4 address.
 
       * `primary` - Whether this address is the primary address for the interface.
 
+<<<<<<< Updated upstream
     * `shared` - (Computed) The IPv4 addresses assigned to this Linode interface that are also shared with another Linode. Each object in this set supports:
+=======
+    * `shared` - (Computed) The IPv4 address assigned to this Linode interface, which is also shared with another Linode. Each object in this set supports:
+>>>>>>> Stashed changes
 
       * `address` - The shared IPv4 address.
 
@@ -252,7 +338,11 @@ In addition to all arguments above, the following attributes are exported:
 
       * `route_target` - The public IPv6 address that the range is routed to.
 
+<<<<<<< Updated upstream
     * `shared` - (Computed) The IPv6 ranges assigned to this Linode interface that are also shared with another Linode. Each object in this set supports:
+=======
+    * `shared` - (Computed) The IPv6 address assigned to this Linode interface, which is also shared with another Linode. Each object in this set supports:
+>>>>>>> Stashed changes
 
       * `range` - The shared IPv6 range.
 
@@ -268,7 +358,11 @@ In addition to all arguments above, the following attributes are exported:
 
   * `ipv4` - IPv4 configuration for the VPC interface:
 
+<<<<<<< Updated upstream
     * `assigned_addresses` - (Computed) The IPv4 addresses assigned for use in the VPC subnet, calculated from the `addresses` input. Each object in this set supports:
+=======
+    * `assigned_addresses` - (Computed) Assigned IPv4 addresses to use in the VPC subnet, calculated from `addresses` input. Each object in this set supports:
+>>>>>>> Stashed changes
 
       * `address` - The assigned IPv4 address.
 
@@ -276,6 +370,7 @@ In addition to all arguments above, the following attributes are exported:
 
       * `nat_1_1_address` - The assigned 1:1 NAT IPv4 address used to associate a public IPv4 address with the interface's VPC subnet IPv4 address.
 
+<<<<<<< Updated upstream
     * `assigned_ranges` - (Computed) The IPv4 ranges assigned for use in the VPC subnet, calculated from the `ranges` input. Each object in this set supports:
 
       * `range` - The assigned IPv4 range.
@@ -286,6 +381,28 @@ Interfaces can be imported using a Linode ID followed by an Interface ID, separa
 
 ```sh
 terraform import linode_interface.example 67890,12345
+=======
+    * `assigned_ranges` - (Computed) Assigned IPv4 ranges to use in the VPC subnet, calculated from `ranges` input. Each object in this set supports:
+
+      * `range` - The assigned IPv4 range.
+
+  * `ipv6` - IPv6 assigned through `slaac` and `ranges`. **NOTE: IPv6 VPCs may not currently be available to all users.**
+
+    * `assigned_slaac` - Assigned IPv6 SLAAC address ranges to use in the VPC subnet, calculated from `slaac` input.
+
+      * `range` - The IPv6 network range in CIDR notation.
+
+    * `assigned_ranges` - Assigned additional IPv6 ranges to use in the VPC subnet, calculated from `ranges` input.
+
+      * `range` - The IPv6 network range in CIDR notation.
+
+## Import
+
+Interfaces can be imported using an Interface ID followed by a Linode ID, separated by a comma, e.g.
+
+```sh
+terraform import linode_interface.example 12345,67890
+>>>>>>> Stashed changes
 ```
 
 ## Notes
@@ -293,5 +410,10 @@ terraform import linode_interface.example 67890,12345
 * Each Linode instance can have up to 3 network interfaces.
 * VLAN interfaces cannot be updated after creation and require recreation.
 * VPC subnet IDs cannot be changed after interface creation.
+<<<<<<< Updated upstream
 * Firewall IDs are only supported for public and VPC interfaces, not for VLAN interfaces.
 * When configuring multiple interfaces, use the `default_route` setting to specify which interface should handle default routing.
+=======
+* Firewall IDs are only supported for public and VPC interfaces, not VLAN interfaces.
+* When configuring multiple interfaces, use `default_route` to specify which interface should handle default routing.
+>>>>>>> Stashed changes

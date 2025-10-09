@@ -79,6 +79,14 @@ func (m *ModelVPCIP) FlattenVPCIP(ctx context.Context, vpcIp *linodego.VPCIP, pr
 		preserveKnown,
 	)
 
+	var newConfigID types.Int64
+	if vpcIp.ConfigID == 0 {
+		newConfigID = types.Int64Null()
+	} else {
+		newConfigID = types.Int64Value(int64(vpcIp.ConfigID))
+	}
+	m.ConfigID = helper.KeepOrUpdateValue(m.ConfigID, newConfigID, preserveKnown)
+
 	return rd
 }
 

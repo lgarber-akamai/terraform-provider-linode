@@ -12,6 +12,7 @@ import (
 
 type VPCAttrModel struct {
 	IPv4     types.Object `tfsdk:"ipv4"`
+	IPv6     types.Object `tfsdk:"ipv6"`
 	SubnetID types.Int64  `tfsdk:"subnet_id"`
 }
 
@@ -36,6 +37,27 @@ type VPCIPv4RangeAttrModel struct {
 	Range types.String `tfsdk:"range"`
 }
 
+type VPCIPv6AttrModel struct {
+	IsPublic       types.Bool `tfsdk:"is_public"`
+	SLAAC          types.List `tfsdk:"slaac"`
+	AssignedSLAAC  types.Set  `tfsdk:"assigned_slaac"`
+	Ranges         types.List `tfsdk:"ranges"`
+	AssignedRanges types.Set  `tfsdk:"assigned_ranges"`
+}
+
+type VPCIPv6SLAACAttrModel struct {
+	Range types.String `tfsdk:"range"`
+}
+
+type VPCIPv6SLAACAttrComputedModel struct {
+	Range   types.String `tfsdk:"range"`
+	Address types.String `tfsdk:"address"`
+}
+
+type VPCIPv6RangeAttrModel struct {
+	Range types.String `tfsdk:"range"`
+}
+
 func (plan *VPCAttrModel) GetCreateOptions(ctx context.Context, diags *diag.Diagnostics) (opts linodego.VPCInterfaceCreateOptions) {
 	opts.SubnetID = helper.FrameworkSafeInt64ToInt(plan.SubnetID.ValueInt64(), diags)
 
@@ -44,6 +66,13 @@ func (plan *VPCAttrModel) GetCreateOptions(ctx context.Context, diags *diag.Diag
 		plan.IPv4.As(ctx, &planIPv4, basetypes.ObjectAsOptions{})
 		ipv4Opts, _ := planIPv4.GetCreateOrUpdateOptions(ctx, nil)
 		opts.IPv4 = &ipv4Opts
+	}
+
+	if !plan.IPv6.IsUnknown() && !plan.IPv6.IsNull() {
+		var planIPv6 VPCIPv6AttrModel
+		plan.IPv6.As(ctx, &planIPv6, basetypes.ObjectAsOptions{})
+		ipv6Opts, _ := planIPv6.GetCreateOrUpdateOptions(ctx, nil)
+		opts.IPv6 = &ipv6Opts
 	}
 
 	return opts
@@ -67,6 +96,21 @@ func (plan *VPCAttrModel) GetUpdateOptions(
 
 		if ipv4Opts, ipv4ShouldUpdate := planIPv4.GetCreateOrUpdateOptions(ctx, stateIPv4); ipv4ShouldUpdate {
 			opts.IPv4 = &ipv4Opts
+			shouldUpdate = true
+		}
+	}
+
+	if !plan.IPv6.IsUnknown() && !plan.IPv6.IsNull() {
+		var planIPv6 VPCIPv6AttrModel
+		plan.IPv6.As(ctx, &planIPv6, basetypes.ObjectAsOptions{})
+
+		var stateIPv6 *VPCIPv6AttrModel
+		if state != nil && !state.IPv6.IsNull() {
+			state.IPv6.As(ctx, &stateIPv6, basetypes.ObjectAsOptions{})
+		}
+
+		if ipv6Opts, ipv6ShouldUpdate := planIPv6.GetCreateOrUpdateOptions(ctx, stateIPv6); ipv6ShouldUpdate {
+			opts.IPv6 = &ipv6Opts
 			shouldUpdate = true
 		}
 	}
@@ -148,6 +192,19 @@ func (data *VPCAttrModel) FlattenVPCInterface(
 	}
 
 	data.IPv4 = *flattenedIPv4
+
+	flattenedIPv6 := helper.KeepOrUpdateSingleNestedAttributesWithTypes(
+		ctx, data.IPv6, vpcIPv6Attribute.GetType().(basetypes.ObjectType).AttrTypes, preserveKnown, diags,
+		func(ipv6 *VPCIPv6AttrModel, isNull *bool, pk bool, d *diag.Diagnostics) {
+			ipv6.FlattenVPCIPv6(ctx, vpcInterface.IPv6, pk, d)
+		},
+	)
+
+	if diags.HasError() {
+		return
+	}
+
+	data.IPv6 = *flattenedIPv6
 }
 
 func (data *VPCIPv4AttrModel) FlattenVPCIPv4(ctx context.Context, ipv4 linodego.VPCInterfaceIPv4, preserveKnown bool, diags *diag.Diagnostics) {
@@ -173,9 +230,6 @@ func (data *VPCIPv4AttrModel) FlattenVPCIPv4(ctx context.Context, ipv4 linodego.
 		ctx, computedVPCInterfaceIPv4Address.GetAttributes().Type(), assignedAddresses,
 	)
 	diags.Append(assignedAddressesDiags...)
-	if diags.HasError() {
-		return
-	}
 
 	data.AssignedAddresses = helper.KeepOrUpdateValue(data.AssignedAddresses, assignedAddressesValue, preserveKnown)
 
@@ -188,6 +242,116 @@ func (data *VPCIPv4AttrModel) FlattenVPCIPv4(ctx context.Context, ipv4 linodego.
 
 	assignedRangesValue, assignedRangesDiags := types.SetValueFrom(
 		ctx, computedVPCInterfaceIPv4Range.GetAttributes().Type(), assignedRanges,
+	)
+	diags.Append(assignedRangesDiags...)
+	if diags.HasError() {
+		return
+	}
+
+	data.AssignedRanges = helper.KeepOrUpdateValue(data.AssignedRanges, assignedRangesValue, preserveKnown)
+	// data.IPv6 = *flattenedIPv6
+}
+
+func (plan *VPCIPv6AttrModel) GetCreateOrUpdateOptions(
+	ctx context.Context,
+	state *VPCIPv6AttrModel,
+) (opts linodego.VPCInterfaceIPv6CreateOptions, shouldUpdate bool) {
+	if !plan.IsPublic.IsUnknown() &&
+		!plan.IsPublic.IsNull() && (state == nil || !state.IsPublic.Equal(plan.IsPublic)) {
+		opts.IsPublic = plan.IsPublic.ValueBoolPointer()
+		shouldUpdate = true
+	}
+
+	if !plan.SLAAC.IsUnknown() && !plan.SLAAC.IsNull() && (state == nil || !state.SLAAC.Equal(plan.SLAAC)) {
+		length := len(plan.SLAAC.Elements())
+		slaac := make([]VPCIPv6SLAACAttrModel, 0, length)
+		plan.SLAAC.ElementsAs(ctx, &slaac, false)
+
+		slaacOpts := helper.MapSlice(
+			slaac,
+			func(entry VPCIPv6SLAACAttrModel) linodego.VPCInterfaceIPv6SLAACCreateOptions {
+				return entry.GetCreateOptions()
+			},
+		)
+		opts.SLAAC = &slaacOpts
+		shouldUpdate = true
+	}
+
+	if !plan.Ranges.IsUnknown() && !plan.Ranges.IsNull() && (state == nil || !state.Ranges.Equal(plan.Ranges)) {
+		length := len(plan.Ranges.Elements())
+		ranges := make([]VPCIPv6RangeAttrModel, 0, length)
+		plan.Ranges.ElementsAs(ctx, &ranges, false)
+
+		rangeOpts := make([]linodego.VPCInterfaceIPv6RangeCreateOptions, len(ranges))
+		for i, r := range ranges {
+			rangeOpts[i] = r.GetCreateOptions()
+		}
+		opts.Ranges = &rangeOpts
+		shouldUpdate = true
+	}
+
+	return opts, shouldUpdate
+}
+
+func (plan *VPCIPv6SLAACAttrModel) GetCreateOptions() linodego.VPCInterfaceIPv6SLAACCreateOptions {
+	opts := linodego.VPCInterfaceIPv6SLAACCreateOptions{}
+
+	if !plan.Range.IsUnknown() {
+		opts.Range = plan.Range.ValueString()
+	}
+
+	return opts
+}
+
+func (plan *VPCIPv6RangeAttrModel) GetCreateOptions() linodego.VPCInterfaceIPv6RangeCreateOptions {
+	return linodego.VPCInterfaceIPv6RangeCreateOptions{
+		Range: plan.Range.ValueString(),
+	}
+}
+
+func (data *VPCIPv6AttrModel) FlattenVPCIPv6(ctx context.Context, ipv6 linodego.VPCInterfaceIPv6, preserveKnown bool, diags *diag.Diagnostics) {
+	data.IsPublic = helper.KeepOrUpdateValue(data.IsPublic, types.BoolPointerValue(ipv6.IsPublic), preserveKnown)
+
+	// When the object is null/unknown, the types of attributes of the object won't be filled by object.As(...) in the
+	// helper function `KeepOrUpdateSingleNestedAttributeWithTypes`, so resetting manually here.
+	if data.SLAAC.IsNull() {
+		data.SLAAC = types.ListNull(configuredVPCInterfaceIPv6SLAAC.Type())
+	}
+	if data.Ranges.IsNull() {
+		data.Ranges = types.ListNull(configuredVPCInterfaceIPv6Range.Type())
+	}
+
+	assignedSLAAC := helper.MapSlice(
+		ipv6.SLAAC,
+		func(slaac linodego.VPCInterfaceIPv6SLAAC) VPCIPv6SLAACAttrComputedModel {
+			return VPCIPv6SLAACAttrComputedModel{
+				Range:   types.StringValue(slaac.Range),
+				Address: types.StringValue(slaac.Address),
+			}
+		},
+	)
+
+	assignedSLAACValue, assignedSLAACDiags := types.SetValueFrom(
+		ctx, computedVPCInterfaceIPv6SLAAC.GetAttributes().Type(), assignedSLAAC,
+	)
+	diags.Append(assignedSLAACDiags...)
+	if diags.HasError() {
+		return
+	}
+
+	data.AssignedSLAAC = helper.KeepOrUpdateValue(data.AssignedSLAAC, assignedSLAACValue, preserveKnown)
+
+	assignedRanges := helper.MapSlice(
+		ipv6.Ranges,
+		func(r linodego.VPCInterfaceIPv6Range) VPCIPv6RangeAttrModel {
+			return VPCIPv6RangeAttrModel{
+				Range: types.StringValue(r.Range),
+			}
+		},
+	)
+
+	assignedRangesValue, assignedRangesDiags := types.SetValueFrom(
+		ctx, computedVPCInterfaceIPv6Range.GetAttributes().Type(), assignedRanges,
 	)
 	diags.Append(assignedRangesDiags...)
 	if diags.HasError() {
