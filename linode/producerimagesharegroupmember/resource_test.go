@@ -9,11 +9,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/linode/terraform-provider-linode/v3/linode"
 	"github.com/linode/terraform-provider-linode/v3/linode/acceptance"
-	"github.com/linode/terraform-provider-linode/v3/linode/helper"
 	"github.com/linode/terraform-provider-linode/v3/linode/producerimagesharegroupmember/tmpl"
-	"github.com/linode/terraform-provider-linode/v3/version"
 )
 
 // This test requires two separate Linode API tokens, one for the producer
@@ -43,19 +40,8 @@ func TestAccResourceImageShareGroupMember_basic(t *testing.T) {
 		t.Fatalf("Failed to create consumer client: %s", err)
 	}
 
-	// Build provider meta for producer
-	producerMeta := &helper.ProviderMeta{
-		Client: *producerClient,
-	}
-
-	// Build provider meta for consumer
-	consumerMeta := &helper.ProviderMeta{
-		Client: *consumerClient,
-	}
-
-	// Create framework providers
-	producerProvider := linode.CreateFrameworkProviderWithMeta(version.ProviderVersion, producerMeta).(*linode.FrameworkProvider)
-	consumerProvider := linode.CreateFrameworkProviderWithMeta(version.ProviderVersion, consumerMeta).(*linode.FrameworkProvider)
+	producerProvider := acceptance.NewFrameworkProviderWithClient(producerClient)
+	consumerProvider := acceptance.NewFrameworkProviderWithClient(consumerClient)
 
 	resourceName := "linode_producer_image_share_group_member.foobar"
 	shareGroupLabel := acctest.RandomWithPrefix("tf-test")

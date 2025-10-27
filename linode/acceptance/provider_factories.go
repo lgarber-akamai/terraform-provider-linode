@@ -4,12 +4,12 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
 	"github.com/hashicorp/terraform-plugin-mux/tf5to6server"
 	"github.com/hashicorp/terraform-plugin-mux/tf6muxserver"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/linode/terraform-provider-linode/v3/linode"
 )
 
 var ProtoV6ProviderFactories = map[string]func() (tfprotov6.ProviderServer, error){
@@ -48,8 +48,8 @@ var HttpExternalProviders = map[string]resource.ExternalProvider{
 	},
 }
 
-var ProtoV6CustomProviderFactories = map[string]func(provider *linode.FrameworkProvider) (tfprotov6.ProviderServer, error){
-	"linode": func(provider *linode.FrameworkProvider) (tfprotov6.ProviderServer, error) {
+var ProtoV6CustomProviderFactories = map[string]func(provider provider.Provider) (tfprotov6.ProviderServer, error){
+	"linode": func(provider provider.Provider) (tfprotov6.ProviderServer, error) {
 		ctx := context.Background()
 
 		upgradedSDKProvider, err := tf5to6server.UpgradeServer(
