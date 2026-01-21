@@ -410,6 +410,16 @@ func DiskConfigMultiple(t testing.TB, label, pubKey, region string, rootPass str
 		})
 }
 
+func DiskConfigExtended(t testing.TB, label, region string, rootPass string) string {
+	return acceptance.ExecuteTemplate(t,
+		"instance_disk_config_extended", TemplateData{
+			Label:    label,
+			Image:    acceptance.TestImageLatest,
+			Region:   region,
+			RootPass: rootPass,
+		})
+}
+
 func DiskBootImage(t testing.TB, label, image, region string) string {
 	return acceptance.ExecuteTemplate(t,
 		"instance_disk_boot_image", TemplateData{
@@ -669,6 +679,16 @@ func DataBasic(t testing.TB, label, region string, rootPass, maintenancePolicy s
 			Region:            region,
 			RootPass:          rootPass,
 			MaintenancePolicy: maintenancePolicy,
+		})
+}
+
+func DataExtendedDevices(t testing.TB, label, region string, rootPass string) string {
+	return acceptance.ExecuteTemplate(t,
+		"instance_data_extended_devices", TemplateData{
+			Label:    label,
+			Image:    acceptance.TestImageLatest,
+			Region:   region,
+			RootPass: rootPass,
 		})
 }
 

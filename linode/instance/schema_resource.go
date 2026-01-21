@@ -825,7 +825,7 @@ var resourceSchema = map[string]*schema.Schema{
 				},
 				"devices": {
 					Type: schema.TypeList,
-					Description: "Device sda-sdh can be either a Disk or Volume identified by disk_label or volume_id. " +
+					Description: "Device sda-sdbl can be either a Disk or Volume identified by disk_label or volume_id. " +
 						"Only one type per slot allowed.",
 					MaxItems: 1,
 					Optional: true,

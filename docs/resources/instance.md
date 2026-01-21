@@ -288,7 +288,7 @@ Configuration profiles define the VM settings and boot behavior of the Linode In
 
   * `devices` - (Optional) A list of `disk` or `volume` attachments for this `config`.  If the `boot_config_label` omits a `devices` block, the Linode will not be booted.
 
-    * `sda` ... `sdh` - (Optional) The SDA-SDH slots, represent the Linux block device nodes for the first 8 disks attached to the Linode.  Each device must be suplied sequentially.  The device can be either a Disk or a Volume identified by `disk_label` or `volume_id`. Only one disk identifier is permitted per slot. Devices mapped from `sde` through `sdh` are unavailable in `"fullvirt"` `virt_mode`.
+    * `sda` ... `sdbl` - (Optional) The SDA-SDBL slots represent the Linux block device nodes for up to 64 disks attached to the Linode. Each device must be supplied sequentially. The device can be either a Disk or a Volume identified by `disk_label` or `volume_id`. Only one disk identifier is permitted per slot. Devices mapped from `sde` through `sdh` are unavailable in `"fullvirt"` `virt_mode`.
 
       * `disk_label` - (Optional) The `label` of the `disk` to map to this `device` slot.
 

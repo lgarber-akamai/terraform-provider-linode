@@ -156,7 +156,7 @@ func flattenInstanceConfigs(
 		devices := []map[string]interface{}{{}}
 
 		if config.Devices != nil {
-			for key, deviceValue := range helper.ConfigDevicePairs(*config.Devices) {
+			for key, deviceValue := range helper.ConfigDevicePairs(config.Devices) {
 				devices[0][key] = flattenInstanceConfigDevice(
 					deviceValue.Interface().(*linodego.InstanceConfigDevice),
 					diskLabelIDMap,

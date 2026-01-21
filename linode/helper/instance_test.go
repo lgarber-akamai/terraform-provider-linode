@@ -78,11 +78,11 @@ func TestConfigDevicePairs(t *testing.T) {
 		},
 	}
 
-	pairs := maps.Collect(ConfigDevicePairs(deviceMap))
+	pairs := maps.Collect(ConfigDevicePairs(&deviceMap))
 
 	require.Equal(t, 64, len(pairs))
 
-	require.Same(t, deviceMap.SDA, pairs["sda"])
-	require.Nil(t, pairs["sdb"])
-	require.Same(t, deviceMap.SDBC, pairs["sdbc"])
+	require.Same(t, deviceMap.SDA, pairs["sda"].Interface().(*linodego.InstanceConfigDevice))
+	require.Nil(t, pairs["sdb"].Interface().(*linodego.InstanceConfigDevice))
+	require.Same(t, deviceMap.SDBC, pairs["sdbc"].Interface().(*linodego.InstanceConfigDevice))
 }

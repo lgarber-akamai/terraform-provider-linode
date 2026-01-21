@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/linode/linodego"
+	"github.com/linode/terraform-provider-linode/v3/linode/helper"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -244,7 +245,26 @@ func TestFlattenInstanceConfigs(t *testing.T) {
 		},
 	}
 
-	expectedConfigs := []map[string]interface{}{
+	// Build expected devices map with all 64 device slots
+	expectedDevices := make(map[string]interface{})
+	populatedDevices := map[string]bool{
+		"sda": true, "sdb": true, "sdc": true, "sdd": true,
+		"sde": true, "sdf": true, "sdg": true, "sdh": true,
+	}
+	for key := range helper.GetConfigDeviceKeys() {
+		if populatedDevices[key] {
+			expectedDevices[key] = []map[string]any{
+				{
+					"disk_id":    124458,
+					"disk_label": "disk_label",
+				},
+			}
+		} else {
+			expectedDevices[key] = []map[string]any(nil)
+		}
+	}
+
+	expectedConfigs := []map[string]any{
 		{
 			"id":           1,
 			"root_device":  "/dev/sda",
@@ -263,58 +283,7 @@ func TestFlattenInstanceConfigs(t *testing.T) {
 					"devtmpfs_automount": false,
 				},
 			},
-			"devices": []map[string]interface{}{
-				{
-					"sda": []map[string]interface{}{
-						{
-							"disk_id":    124458,
-							"disk_label": "disk_label",
-						},
-					},
-					"sdb": []map[string]interface{}{
-						{
-							"disk_id":    124458,
-							"disk_label": "disk_label",
-						},
-					},
-					"sdc": []map[string]interface{}{
-						{
-							"disk_id":    124458,
-							"disk_label": "disk_label",
-						},
-					},
-					"sdd": []map[string]interface{}{
-						{
-							"disk_id":    124458,
-							"disk_label": "disk_label",
-						},
-					},
-					"sde": []map[string]interface{}{
-						{
-							"disk_id":    124458,
-							"disk_label": "disk_label",
-						},
-					},
-					"sdf": []map[string]interface{}{
-						{
-							"disk_id":    124458,
-							"disk_label": "disk_label",
-						},
-					},
-					"sdg": []map[string]interface{}{
-						{
-							"disk_id":    124458,
-							"disk_label": "disk_label",
-						},
-					},
-					"sdh": []map[string]interface{}{
-						{
-							"disk_id":    124458,
-							"disk_label": "disk_label",
-						},
-					},
-				},
-			},
+			"devices":   []map[string]interface{}{expectedDevices},
 			"interface": make([]map[string]any, 0),
 		},
 	}
@@ -326,7 +295,18 @@ func TestFlattenInstanceConfigs(t *testing.T) {
 	}
 	for i := 0; i < len(expectedConfigs); i++ {
 		if !areMapsEqual(actualConfigs[i], expectedConfigs[i]) {
-			t.Errorf("Config %d: Mismatch between expected and actual config", i)
+			// Print detailed comparison for debugging
+			for key, expectedVal := range expectedConfigs[i] {
+				actualVal := actualConfigs[i][key]
+				if !reflect.DeepEqual(expectedVal, actualVal) {
+					t.Errorf("Config %d: Key %q mismatch\n  Expected: %#v\n  Actual:   %#v", i, key, expectedVal, actualVal)
+				}
+			}
+			for key := range actualConfigs[i] {
+				if _, exists := expectedConfigs[i][key]; !exists {
+					t.Errorf("Config %d: Unexpected key %q in actual config", i, key)
+				}
+			}
 		}
 	}
 }

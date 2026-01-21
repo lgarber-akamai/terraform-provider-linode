@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
-	"maps"
 	"net"
 	"reflect"
 	"strconv"
@@ -319,8 +318,12 @@ func changeInstanceConfigDevice(
 		tDevice = nil
 	}
 
-	deviceMapFields := maps.Collect(helper.ConfigDevicePairs(deviceMap))
-	deviceMapFields[namedSlot].Set(reflect.ValueOf(tDevice))
+	for slotName, field := range helper.ConfigDevicePairs(&deviceMap) {
+		if slotName == namedSlot {
+			field.Set(reflect.ValueOf(tDevice))
+			break
+		}
+	}
 
 	return deviceMap
 }
@@ -332,17 +335,13 @@ func emptyInstanceConfigDevice(dev linodego.InstanceConfigDevice) bool {
 
 // emptyConfigDeviceMap returns true only when none of the disks in a config device map have been assigned.
 func emptyConfigDeviceMap(dmap linodego.InstanceConfigDeviceMap) bool {
-	drives := []*linodego.InstanceConfigDevice{
-		dmap.SDA, dmap.SDB, dmap.SDC, dmap.SDD, dmap.SDE, dmap.SDF, dmap.SDG, dmap.SDH,
-	}
-	empty := true
-	for _, drive := range drives {
-		if drive != nil && !emptyInstanceConfigDevice(*drive) {
-			empty = false
-			break
+	for _, field := range helper.ConfigDevicePairs(&dmap) {
+		device := field.Interface().(*linodego.InstanceConfigDevice)
+		if device != nil && !emptyInstanceConfigDevice(*device) {
+			return false
 		}
 	}
-	return empty
+	return true
 }
 
 type volumeDetacher func(context.Context, int, string) error
@@ -1095,9 +1094,11 @@ func applyInstanceMigration(
 func detachConfigVolumes(
 	ctx context.Context, dmap linodego.InstanceConfigDeviceMap, detacher volumeDetacher,
 ) error {
-	// Preallocate our slice of config devices
-	drives := []*linodego.InstanceConfigDevice{
-		dmap.SDA, dmap.SDB, dmap.SDC, dmap.SDD, dmap.SDE, dmap.SDF, dmap.SDG, dmap.SDH,
+	// Collect all devices from the config device map
+	var drives []*linodego.InstanceConfigDevice
+	for _, field := range helper.ConfigDevicePairs(&dmap) {
+		device := field.Interface().(*linodego.InstanceConfigDevice)
+		drives = append(drives, device)
 	}
 
 	// Make a buffered error channel for our goroutines to send error values back on

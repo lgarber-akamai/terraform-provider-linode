@@ -191,7 +191,7 @@ The following attributes are available on devices:
 
 An assignment between a disk and a configuration profile device. This block supersedes the `devices` block.
 
-Compared with `devices`, `sda` ... `sdh` is now in the `device_name` attribute in a device block, and the block itself becomes unnamed.
+Compared with `devices`, `sda` ... `sdbl` is now in the `device_name` attribute in a device block, and the block itself becomes unnamed.
 
 ```terraform
 device {

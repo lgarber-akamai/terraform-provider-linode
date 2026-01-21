@@ -539,11 +539,11 @@ func GetConfigDeviceKeys() iter.Seq[string] {
 // NOTE: This may be slower than direct access due to the use of reflection,
 // so we should consider removing it alongside the move to maps in the future.
 func ConfigDevicePairs(
-	deviceMap linodego.InstanceConfigDeviceMap,
+	deviceMap *linodego.InstanceConfigDeviceMap,
 ) iter.Seq2[string, reflect.Value] {
 	return func(yield func(string, reflect.Value) bool) {
-		deviceMapType := reflect.TypeOf(deviceMap)
-		deviceMapValue := reflect.ValueOf(deviceMap)
+		deviceMapType := reflect.TypeOf(*deviceMap)
+		deviceMapValue := reflect.ValueOf(deviceMap).Elem()
 
 		result := make(map[string]struct{}, MaxDevicesPerConfig)
 		for field := range GetConfigDeviceKeys() {
