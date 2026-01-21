@@ -5,7 +5,7 @@ resource "linode_instance" "foobar" {
     region = "{{ .Region }}"
 
     # Necessary to increase volume limit
-    type = "g6-standard-6-devcloud"
+    type = "g6-standard-6"
 }
 
 {{ template "instance_config_disk_with_swap" . }}

@@ -745,13 +745,14 @@ func TestAccResourceInstance_disksAndConfigs(t *testing.T) {
 	})
 }
 
-func TestAccResourceInstance_diskConfigExtended(t *testing.T) {
+func TestAccResourceInstance_diskConfigDevicesExtension(t *testing.T) {
 	t.Parallel()
 
 	resName := "linode_instance.foobar"
 	var instance linodego.Instance
 
 	instanceName := acctest.RandomWithPrefix("tf_test")
+	instanceType := "g6-standard-6"
 	rootPass := acctest.RandString(64)
 
 	resource.Test(t, resource.TestCase{
@@ -763,11 +764,11 @@ func TestAccResourceInstance_diskConfigExtended(t *testing.T) {
 		),
 		Steps: []resource.TestStep{
 			{
-				Config: tmpl.DiskConfigExtended(t, instanceName, testRegion, rootPass),
+				Config: tmpl.DiskConfigDevicesExtension(t, instanceName, instanceType, testRegion, rootPass),
 				Check: resource.ComposeTestCheckFunc(
 					acceptance.CheckInstanceExists(resName, &instance),
 					resource.TestCheckResourceAttr(resName, "label", instanceName),
-					resource.TestCheckResourceAttr(resName, "type", "g6-standard-6"),
+					resource.TestCheckResourceAttr(resName, "type", instanceType),
 					resource.TestCheckResourceAttr(resName, "region", testRegion),
 					resource.TestCheckResourceAttr(resName, "config.0.devices.0.sda.0.disk_label", "boot"),
 					resource.TestCheckResourceAttr(resName, "config.0.devices.0.sdb.0.disk_label", "swap"),

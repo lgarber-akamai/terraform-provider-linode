@@ -65,11 +65,12 @@ func TestAccDataSourceInstances_basic(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceInstances_extendedDevices(t *testing.T) {
+func TestAccDataSourceInstances_devicesExtension(t *testing.T) {
 	t.Parallel()
 
 	resName := "data.linode_instances.foobar"
 	instanceName := acctest.RandomWithPrefix("tf_test")
+	instanceType := "g6-standard-6"
 	rootPass := acctest.RandString(64)
 
 	resource.Test(t, resource.TestCase{
@@ -81,11 +82,11 @@ func TestAccDataSourceInstances_extendedDevices(t *testing.T) {
 		),
 		Steps: []resource.TestStep{
 			{
-				Config: tmpl.DataExtendedDevices(t, instanceName, testRegion, rootPass),
+				Config: tmpl.DataDevicesExtension(t, instanceName, instanceType, testRegion, rootPass),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resName, "instances.#", "1"),
 					resource.TestCheckResourceAttrSet(resName, "instances.0.id"),
-					resource.TestCheckResourceAttr(resName, "instances.0.type", "g6-standard-6"),
+					resource.TestCheckResourceAttr(resName, "instances.0.type", instanceType),
 					resource.TestCheckResourceAttr(resName, "instances.0.config.#", "1"),
 					resource.TestCheckResourceAttrSet(resName, "instances.0.config.0.devices.0.sda.0.disk_id"),
 					resource.TestCheckResourceAttrSet(resName, "instances.0.config.0.devices.0.sdb.0.disk_id"),

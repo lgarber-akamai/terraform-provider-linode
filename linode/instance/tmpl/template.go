@@ -410,10 +410,11 @@ func DiskConfigMultiple(t testing.TB, label, pubKey, region string, rootPass str
 		})
 }
 
-func DiskConfigExtended(t testing.TB, label, region string, rootPass string) string {
+func DiskConfigDevicesExtension(t testing.TB, label, instanceType, region string, rootPass string) string {
 	return acceptance.ExecuteTemplate(t,
-		"instance_disk_config_extended", TemplateData{
+		"instance_disk_config_devices_extension", TemplateData{
 			Label:    label,
+			Type:     instanceType,
 			Image:    acceptance.TestImageLatest,
 			Region:   region,
 			RootPass: rootPass,
@@ -682,10 +683,11 @@ func DataBasic(t testing.TB, label, region string, rootPass, maintenancePolicy s
 		})
 }
 
-func DataExtendedDevices(t testing.TB, label, region string, rootPass string) string {
+func DataDevicesExtension(t testing.TB, label, instanceType, region string, rootPass string) string {
 	return acceptance.ExecuteTemplate(t,
-		"instance_data_extended_devices", TemplateData{
+		"instance_data_devices_extension", TemplateData{
 			Label:    label,
+			Type:     instanceType,
 			Image:    acceptance.TestImageLatest,
 			Region:   region,
 			RootPass: rootPass,
