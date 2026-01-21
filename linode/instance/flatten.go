@@ -153,16 +153,16 @@ func flattenInstanceConfigs(
 ) (configs []map[string]interface{}) {
 	for _, config := range instanceConfigs {
 
-		devices := []map[string]interface{}{{
-			"sda": flattenInstanceConfigDevice(config.Devices.SDA, diskLabelIDMap),
-			"sdb": flattenInstanceConfigDevice(config.Devices.SDB, diskLabelIDMap),
-			"sdc": flattenInstanceConfigDevice(config.Devices.SDC, diskLabelIDMap),
-			"sdd": flattenInstanceConfigDevice(config.Devices.SDD, diskLabelIDMap),
-			"sde": flattenInstanceConfigDevice(config.Devices.SDE, diskLabelIDMap),
-			"sdf": flattenInstanceConfigDevice(config.Devices.SDF, diskLabelIDMap),
-			"sdg": flattenInstanceConfigDevice(config.Devices.SDG, diskLabelIDMap),
-			"sdh": flattenInstanceConfigDevice(config.Devices.SDH, diskLabelIDMap),
-		}}
+		devices := []map[string]interface{}{{}}
+
+		if config.Devices != nil {
+			for key, deviceValue := range helper.ConfigDevicePairs(*config.Devices) {
+				devices[0][key] = flattenInstanceConfigDevice(
+					deviceValue.Interface().(*linodego.InstanceConfigDevice),
+					diskLabelIDMap,
+				)
+			}
+		}
 
 		interfaces := helper.FlattenInterfaces(config.Interfaces)
 

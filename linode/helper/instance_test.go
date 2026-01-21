@@ -3,9 +3,12 @@
 package helper
 
 import (
+	"maps"
+	"slices"
 	"testing"
 
 	"github.com/linode/linodego"
+	"github.com/stretchr/testify/require"
 )
 
 func TestExpandConfigInterface(t *testing.T) {
@@ -54,4 +57,32 @@ func TestFlattenConfigInterface(t *testing.T) {
 			t.Errorf("Mismatch for key %s: Expected %v, but got %v", key, expectedValue, resultValue)
 		}
 	}
+}
+
+func TestGetConfigDeviceKeys(t *testing.T) {
+	keys := slices.Collect(GetConfigDeviceKeys())
+	require.Len(t, keys, 64)
+	require.Equal(t, "sda", keys[0])
+	require.Equal(t, "sdaa", keys[26])
+	require.Equal(t, "sdba", keys[52])
+	require.Equal(t, "sdbl", keys[63])
+}
+
+func TestConfigDevicePairs(t *testing.T) {
+	deviceMap := linodego.InstanceConfigDeviceMap{
+		SDA: &linodego.InstanceConfigDevice{
+			DiskID: 123,
+		},
+		SDBC: &linodego.InstanceConfigDevice{
+			VolumeID: 456,
+		},
+	}
+
+	pairs := maps.Collect(ConfigDevicePairs(deviceMap))
+
+	require.Equal(t, 64, len(pairs))
+
+	require.Same(t, deviceMap.SDA, pairs["sda"])
+	require.Nil(t, pairs["sdb"])
+	require.Same(t, deviceMap.SDBC, pairs["sdbc"])
 }

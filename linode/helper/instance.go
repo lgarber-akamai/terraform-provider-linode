@@ -6,6 +6,9 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"iter"
+	"reflect"
+	"strings"
 	"time"
 
 	fwdiag "github.com/hashicorp/terraform-plugin-framework/diag"
@@ -19,6 +22,7 @@ const (
 	RootPassMinimumCharacters     = 11
 	RootPassMaximumCharacters     = 128
 	DefaultFrameworkRebootTimeout = 600
+	MaxDevicesPerConfig           = 64
 )
 
 var bootEvents = []linodego.EventAction{linodego.ActionLinodeBoot, linodego.ActionLinodeReboot}
@@ -505,4 +509,61 @@ func WaitForInstanceNonTransientStatus(
 	}
 
 	return instance.Status, nil
+}
+
+// GetConfigDeviceKeys returns an iterator over valid config device keys.
+// [sda, sdb, ..., sdbk, sdbl]
+func GetConfigDeviceKeys() iter.Seq[string] {
+	return func(yield func(string) bool) {
+		for i := range MaxDevicesPerConfig {
+			suffixRune := rune('a' + (i % 26))
+
+			prefixIndex := i/26 - 1
+			prefix := ""
+
+			// Start with sdX instead of sdaX
+			if prefixIndex >= 0 {
+				prefix = string(rune('a' + prefixIndex))
+			}
+
+			if !yield(fmt.Sprintf("sd%s%c", prefix, suffixRune)) {
+				return
+			}
+		}
+	}
+}
+
+// ConfigDevicePairs returns an iterator over the string key and *InstanceConfigDevice
+// value for the given device linodego.InstanceConfigDeviceMap.
+//
+// NOTE: This may be slower than direct access due to the use of reflection,
+// so we should consider removing it alongside the move to maps in the future.
+func ConfigDevicePairs(
+	deviceMap linodego.InstanceConfigDeviceMap,
+) iter.Seq2[string, reflect.Value] {
+	return func(yield func(string, reflect.Value) bool) {
+		deviceMapType := reflect.TypeOf(deviceMap)
+		deviceMapValue := reflect.ValueOf(deviceMap)
+
+		result := make(map[string]struct{}, MaxDevicesPerConfig)
+		for field := range GetConfigDeviceKeys() {
+			result[strings.ToLower(field)] = struct{}{}
+		}
+
+		for i := 0; i < deviceMapType.NumField(); i++ {
+			fieldName := strings.ToLower(deviceMapType.Field(i).Name)
+
+			if _, ok := result[fieldName]; !ok {
+				// This field isn't relevant
+				continue
+			}
+
+			if !yield(
+				fieldName,
+				deviceMapValue.Field(i),
+			) {
+				return
+			}
+		}
+	}
 }

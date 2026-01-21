@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
+	"maps"
 	"net"
 	"reflect"
 	"strconv"
@@ -317,24 +318,9 @@ func changeInstanceConfigDevice(
 	if tDevice != nil && emptyInstanceConfigDevice(*tDevice) {
 		tDevice = nil
 	}
-	switch namedSlot {
-	case "sda":
-		deviceMap.SDA = tDevice
-	case "sdb":
-		deviceMap.SDB = tDevice
-	case "sdc":
-		deviceMap.SDC = tDevice
-	case "sdd":
-		deviceMap.SDD = tDevice
-	case "sde":
-		deviceMap.SDE = tDevice
-	case "sdf":
-		deviceMap.SDF = tDevice
-	case "sdg":
-		deviceMap.SDG = tDevice
-	case "sdh":
-		deviceMap.SDH = tDevice
-	}
+
+	deviceMapFields := maps.Collect(helper.ConfigDevicePairs(deviceMap))
+	deviceMapFields[namedSlot].Set(reflect.ValueOf(tDevice))
 
 	return deviceMap
 }

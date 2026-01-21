@@ -1,0 +1,38 @@
+{{ define "instance_config_device_named_block_ext" }}
+
+resource "linode_instance" "foobar" {
+    label = "{{ .Label }}"
+    region = "{{ .Region }}"
+
+    # Necessary to increase volume limit
+    type = "g6-standard-6-devcloud"
+}
+
+{{ template "instance_config_disk_with_swap" . }}
+
+resource "linode_instance_config" "foobar" {
+  linode_id = linode_instance.foobar.id
+  label = "my-config"
+
+  devices {
+    sda {
+      disk_id = linode_instance_disk.foobar.id
+    }
+
+    sdb {
+      disk_id = linode_instance_disk.foobar_swap.id
+    }
+
+    sdk {
+      volume_id = linode_volume.foobar.id
+    }
+  }
+}
+
+resource "linode_volume" "foobar" {
+    label = "{{ .Label }}"
+    size = 20
+    region = linode_instance.foobar.region
+}
+
+{{ end }}

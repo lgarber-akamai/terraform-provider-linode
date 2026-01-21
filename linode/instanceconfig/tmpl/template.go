@@ -174,3 +174,25 @@ func VPCInterfaceIPv61(t testing.TB, label, region string, rootPass string) stri
 		},
 	)
 }
+
+func DeviceBlockExt(t testing.TB, label, region string, rootPass string) string {
+	return acceptance.ExecuteTemplate(
+		t,
+		"instance_config_device_block_ext", TemplateData{
+			Label:    label,
+			Region:   region,
+			RootPass: rootPass,
+		},
+	)
+}
+
+func DeviceNamedBlockExt(t testing.TB, label, region string, rootPass string) string {
+	return acceptance.ExecuteTemplate(
+		t,
+		"instance_config_device_named_block_ext", TemplateData{
+			Label:    label,
+			Region:   region,
+			RootPass: rootPass,
+		},
+	)
+}
